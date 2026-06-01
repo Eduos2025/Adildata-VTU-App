@@ -9,6 +9,8 @@ import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 
 import { useTheme } from "../../context/ThemeContext";
+import { endPoints } from "@/constants/urls";
+import { APPNAME } from "@/constants/variables";
 
 const SuccessIcon = require("@/assets/images/success.png");
 
@@ -69,7 +71,7 @@ const DataSuccess = () => {
       if (!userToken) return;
 
       const response = await fetch(
-        "https://api.rahausub.com.ng/getBalance.php",
+        endPoints.getBalance,
         {
           method: "POST",
           headers: {
@@ -111,7 +113,7 @@ const DataSuccess = () => {
         <View style={styles.topSection}>
           <Image source={SuccessIcon} style={styles.successImage} />
           <Text style={[styles.successTitle, { color: colors.primary }]}>Transaction Successful</Text>
-          <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>Thank you For Using Rahau Sub</Text>
+          <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>Thank you For Using {APPNAME}</Text>
         </View>
 
         <View style={styles.bottomSection}>

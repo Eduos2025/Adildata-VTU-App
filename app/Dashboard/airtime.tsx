@@ -1,3 +1,4 @@
+import { endPoints } from "@/constants/urls";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,6 +8,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,12 +18,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Keyboard
 } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AlertModal from "../components/AlertModal";
 import { useTheme } from "../../context/ThemeContext";
+import AlertModal from "../components/AlertModal";
+import Header from "../components/header";
 
 const networks = [
   { id: "mtn", label: "MTN", logo: require("@/assets/images/mtn.png") },
@@ -49,7 +51,7 @@ const mapNetworkFromAPI = (apiNetwork: any): string | null => {
       "etisalat nigeria": "etisalat",
       "t2 mobile nigeria": "etisalat",
       "9mobile": "etisalat",
-      "etisalat": "etisalat",
+      etisalat: "etisalat",
     };
     const key = apiNetwork.toLowerCase().trim();
     return networkMap[key] || null;
@@ -145,11 +147,10 @@ const Airtime = () => {
     }, []),
   );
 
-
   // Detect Network Function
   const detectNetwork = async (phone: string) => {
     try {
-      const res = await fetch("https://api.rahausub.com.ng/detectNetwork.php", {
+      const res = await fetch(endPoints.detectNetwork, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -208,7 +209,7 @@ const Airtime = () => {
     // Only allow digits and limit to 11 characters
     const cleaned = text.replace(/[^0-9]/g, "").slice(0, 11);
     setPhoneNumber(cleaned);
-    
+
     if (cleaned.length === 11) {
       Keyboard.dismiss();
       setDetectingNetwork(true);
@@ -267,22 +268,19 @@ const Airtime = () => {
         return;
       }
 
-      const response = await fetch(
-        "https://api.rahausub.com.ng/buyAirtime.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            token: userToken,
-            amount: Number(amount),
-            number: phoneNumber,
-            network: selectedNetwork!.id,
-            pin: pin || "fingerprint",
-          }),
+      const response = await fetch(endPoints.buyAirtime, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          token: userToken,
+          amount: Number(amount),
+          number: phoneNumber,
+          network: selectedNetwork!.id,
+          pin: pin || "fingerprint",
+        }),
+      });
 
       const data = await response.json();
 
@@ -320,16 +318,13 @@ const Airtime = () => {
         return;
       }
 
-      const response = await fetch(
-        "https://api.rahausub.com.ng/getBalance.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: userToken }),
+      const response = await fetch(endPoints.getBalance, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ token: userToken }),
+      });
 
       const data = await response.json();
 
@@ -371,22 +366,19 @@ const Airtime = () => {
         return;
       }
 
-      const response = await fetch(
-        "https://api.rahausub.com.ng/buyAirtime.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            token: userToken,
-            amount: Number(amount),
-            number: phoneNumber,
-            network: selectedNetwork!.id,
-            pin: pin,
-          }),
+      const response = await fetch(endPoints.buyAirtime, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          token: userToken,
+          amount: Number(amount),
+          number: phoneNumber,
+          network: selectedNetwork!.id,
+          pin: pin,
+        }),
+      });
 
       const data = await response.json();
 
@@ -410,7 +402,12 @@ const Airtime = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -421,32 +418,29 @@ const Airtime = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.headerLink}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Buy Airtime</Text>
-            <TouchableOpacity>
-              <Text style={styles.headerLink}>Help</Text>
-            </TouchableOpacity>
-          </LinearGradient>
-
+          {/* HEADER */}
+          <Header title="Buy Airtime" />
           <View style={styles.content}>
             {/* Phone Number input first */}
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Customer Phone Number</Text>
-            <View style={[styles.phoneInputWrapper, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Customer Phone Number
+            </Text>
+            <View
+              style={[
+                styles.phoneInputWrapper,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
+            >
               <TextInput
                 placeholder=""
                 keyboardType="phone-pad"
                 value={phoneNumber}
                 onChangeText={handlePhoneChange}
                 placeholderTextColor={colors.textMuted}
-                style={[styles.textInput, { color: colors.text }]}
+                style={[styles.textInput, { color: colors.textMuted }]}
                 maxLength={11}
               />
               {detectingNetwork ? (
@@ -460,7 +454,11 @@ const Airtime = () => {
                   onPress={resetForm}
                   style={styles.loadingIndicator}
                 >
-                  <Ionicons name="close-circle" size={20} color={colors.textMuted} />
+                  <Ionicons
+                    name="close-circle"
+                    size={20}
+                    color={colors.textMuted}
+                  />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -475,7 +473,11 @@ const Airtime = () => {
                   {selectedNetwork ? (
                     <TouchableOpacity
                       activeOpacity={0.8}
-                      style={[styles.networkCard, styles.networkCardActive, { borderColor: colors.primary }]}
+                      style={[
+                        styles.networkCard,
+                        styles.networkCardActive,
+                        { borderColor: colors.primary },
+                      ]}
                     >
                       <Image
                         source={selectedNetwork.logo}
@@ -487,7 +489,13 @@ const Airtime = () => {
                       <TouchableOpacity
                         key={net.id}
                         activeOpacity={0.8}
-                        style={[styles.networkCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                        style={[
+                          styles.networkCard,
+                          {
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                          },
+                        ]}
                         onPress={() => {
                           setSelectedNetwork(net);
                           setManualListing(false);
@@ -504,14 +512,23 @@ const Airtime = () => {
             {/* Amount input only after network is detected */}
             {selectedNetwork && (
               <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Amount</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Amount
+                </Text>
                 <TextInput
                   placeholder=""
                   keyboardType="numeric"
                   value={amount}
                   onChangeText={setAmount}
                   placeholderTextColor={colors.textMuted}
-                  style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                      color: colors.text,
+                    },
+                  ]}
                 />
               </>
             )}
@@ -574,8 +591,12 @@ const Airtime = () => {
           >
             <View style={styles.confirmHeader}>
               <View>
-                <Text style={[styles.confirmTitle, { color: colors.text }]}>Confirm and Pay</Text>
-                <Text style={[styles.confirmSubtitle, { color: colors.textMuted }]}>
+                <Text style={[styles.confirmTitle, { color: colors.text }]}>
+                  Confirm and Pay
+                </Text>
+                <Text
+                  style={[styles.confirmSubtitle, { color: colors.textMuted }]}
+                >
                   if transaction was successfully, no refund!
                 </Text>
               </View>
@@ -584,39 +605,80 @@ const Airtime = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.confirmBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.confirmBox,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.text }]}>Network:</Text>
+                <Text style={[styles.confirmLabel, { color: colors.text }]}>
+                  Network:
+                </Text>
                 <Text style={[styles.confirmValue, { color: colors.text }]}>
                   {selectedNetwork?.label ?? "-"}
                 </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.text }]}>Phone Number:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{phoneNumber || "-"}</Text>
+                <Text style={[styles.confirmLabel, { color: colors.text }]}>
+                  Phone Number:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {phoneNumber || "-"}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.text }]}>Amount</Text>
+                <Text style={[styles.confirmLabel, { color: colors.text }]}>
+                  Amount
+                </Text>
                 <Text style={[styles.confirmValue, { color: colors.text }]}>
                   {amountValue ? `₦${amountValue.toLocaleString()}` : "-"}
                 </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.text }]}>Discount</Text>
-                <Text style={[styles.confirmValue, { color: colors.success }]}>1%</Text>
+                <Text style={[styles.confirmLabel, { color: colors.text }]}>
+                  Discount
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.success }]}>
+                  1%
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.text }]}>Amount to Pay</Text>
-                <Text style={[styles.confirmValue, { color: colors.primary, fontWeight: '700' }]}>
+                <Text style={[styles.confirmLabel, { color: colors.text }]}>
+                  Amount to Pay
+                </Text>
+                <Text
+                  style={[
+                    styles.confirmValue,
+                    { color: colors.primary, fontWeight: "700" },
+                  ]}
+                >
                   {amountValue ? `N${amountToPay.toLocaleString()}` : "-"}
                 </Text>
               </View>
             </View>
 
-            <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.surface : "#f8fafc", borderColor: colors.border }]}>
-              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
+            <View
+              style={[
+                styles.balanceCard,
+                {
+                  backgroundColor: isDark ? colors.surface : "#f8fafc",
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
+                Wallet Balance
+              </Text>
               <View style={styles.balanceRow}>
-                <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>Balance</Text>
+                <Text
+                  style={[styles.balanceSmall, { color: colors.textMuted }]}
+                >
+                  Balance
+                </Text>
                 <Text style={[styles.balanceValue, { color: colors.primary }]}>
                   ₦{balance.toLocaleString()}
                 </Text>
@@ -625,11 +687,21 @@ const Airtime = () => {
 
             <View style={styles.confirmActions}>
               <TouchableOpacity
-                style={[styles.cancelButton, { backgroundColor: isDark ? colors.surface : "#f1f5f9", borderColor: colors.secondary }]}
+                style={[
+                  styles.cancelButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.secondary,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  },
+                ]}
                 onPress={() => setConfirmVisible(false)}
                 activeOpacity={0.85}
               >
-                <Text style={[styles.cancelText, { color: colors.secondary }]}>Cancel</Text>
+                <Text style={[styles.cancelText, { color: colors.secondary }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.payButton}
@@ -651,7 +723,7 @@ const Airtime = () => {
                   <Text style={styles.payText}>Insufficient Balance</Text>
                 )}
                 <LinearGradient
-                  colors={isDark ? colors.gradient : ["#2A98CF", "#281D74"]}
+                  colors={colors.gradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.payGradient}
@@ -669,16 +741,22 @@ const Airtime = () => {
         onBackdropPress={() => setPinVisible(false)}
         style={styles.pinModal}
       >
-        <View style={[styles.pinScreen, { backgroundColor: colors.background }]}>
+        <View
+          style={[styles.pinScreen, { backgroundColor: colors.background }]}
+        >
           <TouchableOpacity
             onPress={() => setPinVisible(false)}
             style={styles.pinBack}
           >
-            <Text style={[styles.pinBackText, { color: colors.primary }]}>Back</Text>
+            <Text style={[styles.pinBackText, { color: colors.primary }]}>
+              Back
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.pinContent}>
-            <Text style={[styles.pinTitle, { color: colors.text }]}>Enter Passcode</Text>
+            <Text style={[styles.pinTitle, { color: colors.text }]}>
+              Enter Passcode
+            </Text>
 
             <View style={styles.pinDots}>
               {[0, 1, 2, 3].map((idx) => (
@@ -687,12 +765,17 @@ const Airtime = () => {
                   style={[
                     styles.pinDot,
                     { backgroundColor: colors.border },
-                    pin.length > idx && [styles.pinDotActive, { backgroundColor: colors.primary }],
+                    pin.length > idx && [
+                      styles.pinDotActive,
+                      { backgroundColor: colors.primary },
+                    ],
                   ]}
                 />
               ))}
             </View>
-            {processing && <ActivityIndicator size="large" color={colors.primary} />}
+            {processing && (
+              <ActivityIndicator size="large" color={colors.primary} />
+            )}
           </View>
 
           <View style={styles.pinBottom}>
@@ -700,24 +783,40 @@ const Airtime = () => {
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                 <TouchableOpacity
                   key={`key-${num}`}
-                  style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                  style={[
+                    styles.keyButton,
+                    { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                  ]}
                   onPress={() => {
                     setPin((prev) =>
                       prev.length < 4 ? `${prev}${num}` : prev,
                     );
                   }}
                 >
-                  <Text style={[styles.keyText, { color: colors.text }]}>{num}</Text>
+                  <Text style={[styles.keyText, { color: colors.text }]}>
+                    {num}
+                  </Text>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
                 onPress={() => setPin((prev) => prev.slice(0, -1))}
               >
-                <Ionicons name="backspace-outline" size={20} color={colors.primary} />
+                <Ionicons
+                  name="backspace-outline"
+                  size={20}
+                  color={colors.primary}
+                />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                style={[
+                  styles.keyButton,
+                  { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                ]}
                 onPress={() => {
                   setPin((prev) => (prev.length < 4 ? `${prev}0` : prev));
                 }}
@@ -725,7 +824,11 @@ const Airtime = () => {
                 <Text style={[styles.keyText, { color: colors.text }]}>0</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
                 onPress={() => {
                   if (pin.length < 4) {
                     setAlertTitle("Incomplete PIN");
@@ -750,7 +853,9 @@ const Airtime = () => {
                 onPress={handleFingerprintPay}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.fingerprintText, { color: colors.textMuted }]}>
+                <Text
+                  style={[styles.fingerprintText, { color: colors.textMuted }]}
+                >
                   Pay with finger print
                 </Text>
                 <Image
@@ -783,24 +888,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 40,
   },
-  header: {
-    paddingHorizontal: 18,
-    paddingTop: 60,
-    paddingBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  headerLink: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  headerTitle: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+
   content: {
     paddingHorizontal: 18,
     paddingTop: 24,
@@ -954,10 +1042,6 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    borderRadius: 14,
-    borderWidth: 2,
-    paddingVertical: 12,
-    alignItems: "center",
   },
   cancelText: {
     fontWeight: "600",

@@ -15,8 +15,9 @@ import Modal from "react-native-modal";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { AppLogo } from "@/constants/logo";
+import { AppLogo } from "@/constants/images";
 import { styles } from "@/constants/styles";
+import { endPoints } from "@/constants/urls";
 import { router } from "expo-router";
 import nigeria from "../assets/json/nigeria.json"; // adjust path
 import { useTheme } from "../context/ThemeContext";
@@ -55,6 +56,8 @@ const Register = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
 
+  const [referralCode, setReferralCode] = useState<string | undefined>();
+
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -85,10 +88,11 @@ const Register = () => {
       phone: phone,
       state: selectedState,
       password: password,
+      referal: referralCode,
     };
 
     try {
-      const response = await fetch("https://api.rahausub.com.ng/register.php", {
+      const response = await fetch(endPoints.register, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -143,7 +147,7 @@ const Register = () => {
           <Text
             style={{
               marginTop: 0,
-              color: colors.primary,
+              color: colors.text,
               fontSize: 27,
               fontWeight: "bold",
               textAlign: "center",
@@ -179,14 +183,14 @@ const Register = () => {
             placeholderTextColor={colors.textMuted}
             style={{
               height: 50,
-              borderColor: colors.inputBorder,
+              borderColor: colors.border,
               borderWidth: 1,
               borderRadius: 8,
               paddingHorizontal: 10,
               justifyContent: "center",
               marginBottom: 20,
               color: colors.text,
-              backgroundColor: colors.surface,
+              backgroundColor: colors.card,
             }}
           />
         </View>
@@ -210,14 +214,14 @@ const Register = () => {
             placeholderTextColor={colors.textMuted}
             style={{
               height: 50,
-              borderColor: colors.inputBorder,
+              borderColor: colors.border,
               borderWidth: 1,
               borderRadius: 8,
               paddingHorizontal: 10,
               justifyContent: "center",
               marginBottom: 20,
               color: colors.text,
-              backgroundColor: colors.surface,
+              backgroundColor: colors.card,
             }}
           />
         </View>
@@ -241,14 +245,14 @@ const Register = () => {
             placeholderTextColor={colors.textMuted}
             style={{
               height: 50,
-              borderColor: colors.inputBorder,
+              borderColor: colors.border,
               borderWidth: 1,
               borderRadius: 8,
               paddingHorizontal: 10,
               justifyContent: "center",
               marginBottom: 20,
               color: colors.text,
-              backgroundColor: colors.surface,
+              backgroundColor: colors.card,
             }}
           />
         </View>
@@ -271,13 +275,13 @@ const Register = () => {
             onPress={() => setStateModalVisible(true)}
             style={{
               height: 50,
-              borderColor: colors.inputBorder,
+              borderColor: colors.border,
               borderWidth: 1,
               borderRadius: 8,
               paddingHorizontal: 10,
               justifyContent: "center",
               marginBottom: 20,
-              backgroundColor: colors.surface,
+              backgroundColor: colors.card,
             }}
           >
             <Text
@@ -305,14 +309,14 @@ const Register = () => {
           <View
             style={{
               height: 50,
-              borderColor: colors.inputBorder,
+              borderColor: colors.border,
               borderWidth: 1,
               borderRadius: 8,
               paddingHorizontal: 10,
               flexDirection: "row",
               alignItems: "center",
               marginBottom: 20,
-              backgroundColor: colors.surface,
+              backgroundColor: colors.card,
             }}
           >
             <TextInput
@@ -331,6 +335,35 @@ const Register = () => {
           </View>
         </View>
         {/* INPUT END */}
+
+        <View>
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: 12,
+              marginBottom: 2,
+              marginLeft: 3,
+            }}
+          >
+            Referral Code (Optional)
+          </Text>
+          <TextInput
+            onChangeText={setReferralCode}
+            keyboardType="numeric"
+            placeholderTextColor={colors.textMuted}
+            style={{
+              height: 50,
+              borderColor: colors.border,
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 10,
+              justifyContent: "center",
+              marginBottom: 20,
+              color: colors.text,
+              backgroundColor: colors.card,
+            }}
+          />
+        </View>
 
         <Text
           style={{
@@ -358,8 +391,9 @@ const Register = () => {
             style={{
               fontSize: 16,
               textAlign: "center",
-              marginTop: 20,
-              color: colors.primary,
+              marginTop: 10,
+              marginBottom: 30,
+              color: colors.text,
             }}
           >
             Already Have an Account?

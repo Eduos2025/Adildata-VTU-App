@@ -1,3 +1,4 @@
+import { endPoints } from "@/constants/urls";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,12 +22,21 @@ import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import AlertModal from "../components/AlertModal";
+import Header from "../components/header";
 
 const providers = [
   { id: "gotv", label: "GOTV", logo: require("@/assets/images/gotv.png") },
   { id: "dstv", label: "DSTV", logo: require("@/assets/images/dstv.png") },
-  { id: "startimes", label: "Startimes", logo: require("@/assets/images/star.png") },
-  { id: "showmax", label: "Showmax", logo: require("@/assets/images/showmax.png") },
+  {
+    id: "startimes",
+    label: "Startimes",
+    logo: require("@/assets/images/star.png"),
+  },
+  {
+    id: "showmax",
+    label: "Showmax",
+    logo: require("@/assets/images/showmax.png"),
+  },
 ];
 
 const cleanTvPlanName = (name: string): string => {
@@ -106,7 +116,7 @@ const TvSubscription = () => {
   const fetchVariations = async (serviceID: string) => {
     try {
       setFetchingVariations(true);
-      const response = await fetch("https://api.rahausub.com.ng/getTvPlans.php", {
+      const response = await fetch(endPoints.getTVPlans, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ serviceID }),
@@ -146,7 +156,7 @@ const TvSubscription = () => {
       setErrorMessage("");
       setErrorVisible(false);
 
-      const response = await fetch("https://api.rahausub.com.ng/verifySmartCard.php", {
+      const response = await fetch(endPoints.verifySmartCard, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ smartcard, serviceID }),
@@ -196,7 +206,7 @@ const TvSubscription = () => {
       const userToken = await AsyncStorage.getItem("userToken");
       if (!userToken) return;
 
-      const response = await fetch("https://api.rahausub.com.ng/getBalance.php", {
+      const response = await fetch(endPoints.getBalance, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: userToken }),
@@ -232,7 +242,7 @@ const TvSubscription = () => {
       fetchBalance();
       loadFinger();
       return undefined;
-    }, [])
+    }, []),
   );
 
   const handleTvPurchase = async (finalPin: string) => {
@@ -246,7 +256,7 @@ const TvSubscription = () => {
         return;
       }
 
-      const response = await fetch("https://api.rahausub.com.ng/tvSub.php", {
+      const response = await fetch(endPoints.tvSub, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -310,7 +320,12 @@ const TvSubscription = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -321,23 +336,13 @@ const TvSubscription = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.headerLink}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>TV Subscription</Text>
-            <TouchableOpacity>
-              <Text style={styles.headerLink}>Help</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+          {/* HEADER */}
+          <Header title="TV Subscription" />
 
           <View style={styles.content}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Choose Provider</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Choose Provider
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -361,19 +366,37 @@ const TvSubscription = () => {
                     activeOpacity={0.8}
                     style={[
                       styles.networkCard,
-                      { backgroundColor: colors.surface, borderColor: colors.border },
-                      isActive && [styles.networkCardActive, { borderColor: colors.primary }],
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                      },
+                      isActive && [
+                        styles.networkCardActive,
+                        { borderColor: colors.primary },
+                      ],
                     ]}
                   >
-                    <Image source={item.logo} style={styles.networkLogo} resizeMode="contain" />
+                    <Image
+                      source={item.logo}
+                      style={styles.networkLogo}
+                      resizeMode="contain"
+                    />
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Or Select Here</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Or Select Here
+            </Text>
             <TouchableOpacity
-              style={[styles.selectInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}
+              style={[
+                styles.selectInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               onPress={() => setProviderModal(true)}
               activeOpacity={0.8}
             >
@@ -381,7 +404,10 @@ const TvSubscription = () => {
                 style={[
                   styles.selectText,
                   { color: colors.text },
-                  !selectedProvider && [styles.selectPlaceholder, { color: colors.textMuted }],
+                  !selectedProvider && [
+                    styles.selectPlaceholder,
+                    { color: colors.textMuted },
+                  ],
                 ]}
               >
                 {selectedProvider?.label ?? "Choose a provider"}
@@ -389,12 +415,19 @@ const TvSubscription = () => {
               <Ionicons name="chevron-down" size={18} color={colors.accent} />
             </TouchableOpacity>
 
-
             {selectedProvider && (
               <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Select Bouquet</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Select Bouquet
+                </Text>
                 <TouchableOpacity
-                  style={[styles.selectInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}
+                  style={[
+                    styles.selectInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                    },
+                  ]}
                   onPress={() => setPlanModal(true)}
                   activeOpacity={0.8}
                 >
@@ -403,33 +436,62 @@ const TvSubscription = () => {
                       style={[
                         styles.selectText,
                         { color: colors.text },
-                        !selectedVariation && [styles.selectPlaceholder, { color: colors.textMuted }],
+                        !selectedVariation && [
+                          styles.selectPlaceholder,
+                          { color: colors.textMuted },
+                        ],
                       ]}
                     >
-                      {selectedVariation ? cleanTvPlanName(selectedVariation.name) : "Choose a bouquet"}
+                      {selectedVariation
+                        ? cleanTvPlanName(selectedVariation.name)
+                        : "Choose a bouquet"}
                     </Text>
                     {selectedVariation && (
-                      <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '700' }}>
-                        ₦{Number(selectedVariation.variation_amount).toLocaleString()}
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: colors.primary,
+                          fontWeight: "700",
+                        }}
+                      >
+                        ₦
+                        {Number(
+                          selectedVariation.variation_amount,
+                        ).toLocaleString()}
                       </Text>
                     )}
                   </View>
                   {fetchingVariations ? (
                     <ActivityIndicator size="small" color={colors.accent} />
                   ) : (
-                    <Ionicons name="chevron-down" size={18} color={colors.accent} />
+                    <Ionicons
+                      name="chevron-down"
+                      size={18}
+                      color={colors.accent}
+                    />
                   )}
                 </TouchableOpacity>
               </>
             )}
 
-
-
-
             {selectedVariation && (
               <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Smartcard Number (CCA IUC)</Text>
-                <View style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 10 }]}>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Smartcard Number (CCA IUC)
+                </Text>
+                <View
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      paddingRight: 10,
+                    },
+                  ]}
+                >
                   <TextInput
                     placeholder="Enter Smartcard Number"
                     keyboardType="numeric"
@@ -440,38 +502,69 @@ const TvSubscription = () => {
                       setCustomerName("");
                     }}
                     placeholderTextColor={colors.textMuted}
-                    style={[{ color: colors.text, flex: 1, height: '100%' }]}
+                    style={[{ color: colors.text, flex: 1, height: "100%" }]}
                   />
-                  {isVerifying && <ActivityIndicator size="small" color={colors.primary} />}
-                  {isVerified && <Ionicons name="checkmark-circle" size={20} color="#22c55e" />}
+                  {isVerifying && (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  )}
+                  {isVerified && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color="#22c55e"
+                    />
+                  )}
                 </View>
 
                 {isVerified && customerName && (
-                  <Text style={{ color: '#22c55e', fontSize: 13, fontWeight: '600', marginBottom: 15, marginTop: -10 }}>
+                  <Text
+                    style={{
+                      color: "#22c55e",
+                      fontSize: 13,
+                      fontWeight: "600",
+                      marginBottom: 15,
+                      marginTop: -10,
+                    }}
+                  >
                     ✔ Customer Name: {customerName}
                   </Text>
                 )}
 
                 {errorVisible && errorMessage && (
-                  <Text style={{ color: '#ef4444', fontSize: 13, fontWeight: '600', marginBottom: 15, marginTop: -10 }}>
+                  <Text
+                    style={{
+                      color: "#ef4444",
+                      fontSize: 13,
+                      fontWeight: "600",
+                      marginBottom: 15,
+                      marginTop: -10,
+                    }}
+                  >
                     ❌ {errorMessage}
                   </Text>
                 )}
               </>
             )}
 
-
-
             {isVerified && (
               <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Phone Number</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Phone Number
+                </Text>
                 <TextInput
                   placeholder="Recipient Phone Number"
                   keyboardType="phone-pad"
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
                   placeholderTextColor={colors.textMuted}
-                  style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                      color: colors.text,
+                    },
+                  ]}
                   maxLength={11}
                 />
 
@@ -517,7 +610,9 @@ const TvSubscription = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Select Provider</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Select Provider
+          </Text>
           {providers.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -534,8 +629,14 @@ const TvSubscription = () => {
                 fetchVariations(item.id);
               }}
             >
-              <Image source={item.logo} style={styles.modalLogo} resizeMode="contain" />
-              <Text style={[styles.modalItemText, { color: colors.text }]}>{item.label}</Text>
+              <Image
+                source={item.logo}
+                style={styles.modalLogo}
+                resizeMode="contain"
+              />
+              <Text style={[styles.modalItemText, { color: colors.text }]}>
+                {item.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -547,7 +648,9 @@ const TvSubscription = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Select Bouquet</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Select Bouquet
+          </Text>
           <ScrollView style={{ maxHeight: 400 }}>
             {variations.map((v, index) => (
               <TouchableOpacity
@@ -568,13 +671,22 @@ const TvSubscription = () => {
                     gap: 12,
                   }}
                 >
-                  <Text style={[styles.modalItemText, { flex: 1, color: colors.text }]}>
+                  <Text
+                    style={[
+                      styles.modalItemText,
+                      { flex: 1, color: colors.text },
+                    ]}
+                  >
                     {cleanTvPlanName(v.name)}
                   </Text>
                   <Text
                     style={[
                       styles.modalItemText,
-                      { fontWeight: "700", color: colors.accent, flexShrink: 0 },
+                      {
+                        fontWeight: "700",
+                        color: colors.accent,
+                        flexShrink: 0,
+                      },
                     ]}
                   >
                     ₦{Number(v.variation_amount).toLocaleString()}
@@ -583,7 +695,15 @@ const TvSubscription = () => {
               </TouchableOpacity>
             ))}
             {variations.length === 0 && !fetchingVariations && (
-              <Text style={{ textAlign: 'center', color: colors.textMuted, paddingVertical: 20 }}>No plans found.</Text>
+              <Text
+                style={{
+                  textAlign: "center",
+                  color: colors.textMuted,
+                  paddingVertical: 20,
+                }}
+              >
+                No plans found.
+              </Text>
             )}
           </ScrollView>
         </View>
@@ -601,8 +721,12 @@ const TvSubscription = () => {
           >
             <View style={styles.confirmHeader}>
               <View>
-                <Text style={[styles.confirmTitle, { color: colors.text }]}>Confirm and Pay</Text>
-                <Text style={[styles.confirmSubtitle, { color: colors.textMuted }]}>
+                <Text style={[styles.confirmTitle, { color: colors.text }]}>
+                  Confirm and Pay
+                </Text>
+                <Text
+                  style={[styles.confirmSubtitle, { color: colors.textMuted }]}
+                >
                   if transaction was successfully, no refund!
                 </Text>
               </View>
@@ -611,46 +735,109 @@ const TvSubscription = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.confirmBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.confirmBox,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Provider:</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Provider:
+                </Text>
                 <Text style={[styles.confirmValue, { color: colors.text }]}>
                   {selectedProvider?.label ?? "-"}
                 </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Bouquet:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{cleanTvPlanName(selectedVariation?.name) || "-"}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Bouquet:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {cleanTvPlanName(selectedVariation?.name) || "-"}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Smartcard:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{smartcardNumber || "-"}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Smartcard:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {smartcardNumber || "-"}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Amount:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>₦{Number(selectedVariation?.variation_amount || 0).toLocaleString()}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Amount:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  ₦
+                  {Number(
+                    selectedVariation?.variation_amount || 0,
+                  ).toLocaleString()}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Phone Number:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{phoneNumber || "-"}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Phone Number:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {phoneNumber || "-"}
+                </Text>
               </View>
             </View>
 
-            <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.surface : "#f8fbff", borderColor: colors.border }]}>
-              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
+            <View
+              style={[
+                styles.balanceCard,
+                {
+                  backgroundColor: isDark ? colors.surface : "#f8fbff",
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
+                Wallet Balance
+              </Text>
               <View style={styles.balanceRow}>
-                <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>Available Balance</Text>
-                <Text style={[styles.balanceValue, { color: colors.primary }]}>₦{balance.toLocaleString()}</Text>
+                <Text
+                  style={[styles.balanceSmall, { color: colors.textMuted }]}
+                >
+                  Available Balance
+                </Text>
+                <Text style={[styles.balanceValue, { color: colors.primary }]}>
+                  ₦{balance.toLocaleString()}
+                </Text>
               </View>
             </View>
 
             <View style={styles.confirmActions}>
               <TouchableOpacity
-                style={[styles.cancelButton, { backgroundColor: isDark ? colors.surface : "#f1f5f9", borderColor: colors.secondary }]}
+                style={[
+                  styles.cancelButton,
+                  {
+                    backgroundColor: isDark ? colors.surface : "#f1f5f9",
+                    borderColor: colors.secondary,
+                  },
+                ]}
                 onPress={() => setConfirmVisible(false)}
                 activeOpacity={0.85}
               >
-                <Text style={[styles.cancelText, { color: colors.secondary }]}>Cancel</Text>
+                <Text style={[styles.cancelText, { color: colors.secondary }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.payButton}
@@ -679,16 +866,22 @@ const TvSubscription = () => {
         onBackdropPress={() => setPinVisible(false)}
         style={styles.pinModal}
       >
-        <View style={[styles.pinScreen, { backgroundColor: colors.background }]}>
+        <View
+          style={[styles.pinScreen, { backgroundColor: colors.background }]}
+        >
           <TouchableOpacity
             onPress={() => setPinVisible(false)}
             style={styles.pinBack}
           >
-            <Text style={[styles.pinBackText, { color: colors.primary }]}>Back</Text>
+            <Text style={[styles.pinBackText, { color: colors.primary }]}>
+              Back
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.pinContent}>
-            <Text style={[styles.pinTitle, { color: colors.text }]}>Enter Passcode</Text>
+            <Text style={[styles.pinTitle, { color: colors.text }]}>
+              Enter Passcode
+            </Text>
 
             <View style={styles.pinDots}>
               {[0, 1, 2, 3].map((idx) => (
@@ -697,12 +890,21 @@ const TvSubscription = () => {
                   style={[
                     styles.pinDot,
                     { backgroundColor: colors.border },
-                    pin.length > idx && [styles.pinDotActive, { backgroundColor: colors.primary }],
+                    pin.length > idx && [
+                      styles.pinDotActive,
+                      { backgroundColor: colors.primary },
+                    ],
                   ]}
                 />
               ))}
             </View>
-            {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />}
+            {loading && (
+              <ActivityIndicator
+                size="large"
+                color={colors.primary}
+                style={{ marginTop: 20 }}
+              />
+            )}
           </View>
 
           <View style={styles.pinBottom}>
@@ -710,22 +912,40 @@ const TvSubscription = () => {
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                 <TouchableOpacity
                   key={`key-${num}`}
-                  style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                  style={[
+                    styles.keyButton,
+                    { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                  ]}
                   onPress={() => {
-                    setPin((prev) => (prev.length < 4 ? `${prev}${num}` : prev));
+                    setPin((prev) =>
+                      prev.length < 4 ? `${prev}${num}` : prev,
+                    );
                   }}
                 >
-                  <Text style={[styles.keyText, { color: colors.text }]}>{num}</Text>
+                  <Text style={[styles.keyText, { color: colors.text }]}>
+                    {num}
+                  </Text>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
                 onPress={() => setPin((prev) => prev.slice(0, -1))}
               >
-                <Ionicons name="backspace-outline" size={20} color={colors.primary} />
+                <Ionicons
+                  name="backspace-outline"
+                  size={20}
+                  color={colors.primary}
+                />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                style={[
+                  styles.keyButton,
+                  { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                ]}
                 onPress={() => {
                   setPin((prev) => (prev.length < 4 ? `${prev}0` : prev));
                 }}
@@ -733,7 +953,11 @@ const TvSubscription = () => {
                 <Text style={[styles.keyText, { color: colors.text }]}>0</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
                 onPress={() => {
                   if (pin.length < 4) {
                     setAlertTitle("Incomplete PIN");
@@ -744,10 +968,7 @@ const TvSubscription = () => {
                   handleTvPurchase(pin);
                 }}
               >
-                <Ionicons
-                  name="return-up-forward-outline"
-                  size={20}
-                />
+                <Ionicons name="return-up-forward-outline" size={20} />
               </TouchableOpacity>
             </View>
           </View>
@@ -758,7 +979,11 @@ const TvSubscription = () => {
               onPress={handleFingerprintPay}
               activeOpacity={0.8}
             >
-              <Text style={[styles.fingerprintText, { color: colors.textMuted }]}>Pay with finger print</Text>
+              <Text
+                style={[styles.fingerprintText, { color: colors.textMuted }]}
+              >
+                Pay with finger print
+              </Text>
               <Image
                 source={require("@/assets/images/fingerprint.png")}
                 style={styles.fingerprintIcon}

@@ -1,6 +1,5 @@
+import { APPEMAIL, APPNAME } from "@/constants/variables";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
+import Header from "../components/header";
 
 const Contact = () => {
   const { isDark, colors } = useTheme();
@@ -23,7 +23,7 @@ const Contact = () => {
     // IMPORTANT: Use the international format without any +, leading zeros, brackets, or dashes.
     // Example for US number: '15551234567'
     const phoneNumber = "+2348160327173";
-    const message = "Hello! rahausub Agents, I have a question."; // Optional pre-filled message
+    const message = `Hello! ${APPNAME} Agents, I have a question.`; // Optional pre-filled message
 
     // You can use either the whatsapp:// scheme or the universal link.
     // The universal link (https://wa.me/...) is often safer as it gracefully falls back to the browser if the app fails.
@@ -37,7 +37,12 @@ const Contact = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -48,27 +53,31 @@ const Contact = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.headerLink}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Contact Us</Text>
-            <TouchableOpacity>
-              <Text style={styles.headerLink}>Help</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+          {/* HEADER */}
+          <Header title="Contact Us" />
 
           <View style={styles.content}>
-            <View style={[styles.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={[styles.heroIconWrap, { backgroundColor: isDark ? "rgba(37, 211, 102, 0.15)" : "#e8fff0" }]}>
+            <View
+              style={[
+                styles.heroCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <View
+                style={[
+                  styles.heroIconWrap,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(37, 211, 102, 0.15)"
+                      : "#e8fff0",
+                  },
+                ]}
+              >
                 <Ionicons name="logo-whatsapp" size={28} color="#25D366" />
               </View>
-              <Text style={[styles.heroTitle, { color: colors.text }]}>Chat with us on WhatsApp</Text>
+              <Text style={[styles.heroTitle, { color: colors.text }]}>
+                Chat with us on WhatsApp
+              </Text>
               <Text style={[styles.heroText, { color: colors.textMuted }]}>
                 Need quick help? Our support team is available to assist you
                 with airtime, data, electricity bills, and subscriptions. Tap
@@ -83,20 +92,38 @@ const Contact = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={[styles.infoTitle, { color: colors.text }]}>Support Hours</Text>
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.infoTitle, { color: colors.text }]}>
+                Support Hours
+              </Text>
               <Text style={[styles.infoText, { color: colors.textMuted }]}>
                 Monday - Saturday, 8:00am - 10:00pm
               </Text>
-              <Text style={[styles.infoText, { color: colors.textMuted }]}>Sunday, 8:00am - 5:00pm</Text>
-            </View>
- 
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={[styles.infoTitle, { color: colors.text }]}>Other Channels</Text>
               <Text style={[styles.infoText, { color: colors.textMuted }]}>
-                Email: support@rahausub.com.ng
+                Sunday, 8:00am - 5:00pm
               </Text>
-              <Text style={[styles.infoText, { color: colors.textMuted }]}>Phone: 0816 032 7173</Text>
+            </View>
+
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.infoTitle, { color: colors.text }]}>
+                Other Channels
+              </Text>
+              <Text style={[styles.infoText, { color: colors.textMuted }]}>
+                Email: {APPEMAIL}
+              </Text>
+              <Text style={[styles.infoText, { color: colors.textMuted }]}>
+                Phone: 0816 032 7173
+              </Text>
             </View>
           </View>
         </ScrollView>

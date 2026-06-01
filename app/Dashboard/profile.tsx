@@ -1,5 +1,6 @@
+import { endPoints } from "@/constants/urls";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as Notifications from "expo-notifications";
@@ -20,17 +21,12 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AlertModal from "../components/AlertModal";
 import { useTheme } from "../../context/ThemeContext";
+import AlertModal from "../components/AlertModal";
+import Header from "../components/header";
+import useUserStore from "../states/user";
 
 const Avatar = require("@/assets/images/avater.png");
-
-type User = {
-  id: string;
-  email: string;
-  name: string;
-  phone: string;
-};
 
 const Profile = () => {
   const { isDark, toggleTheme, colors } = useTheme();
@@ -54,7 +50,7 @@ const Profile = () => {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  const [user, setUser] = useState<User | null>(null);
+  const user = useUserStore((state) => state.user);
 
   const handleFingerprintToggle = async (value: boolean) => {
     try {
@@ -74,7 +70,7 @@ const Profile = () => {
 
       const userToken = await AsyncStorage.getItem("userToken");
       if (userToken) {
-        const response = await fetch("https://api.rahausub.com.ng/fingerPrintSetting.php", {
+        const response = await fetch(endPoints.fingerPrintSetting, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token: userToken }),
@@ -87,7 +83,9 @@ const Profile = () => {
           await Notifications.scheduleNotificationAsync({
             content: {
               title: "Security Updated",
-              body: value ? "Fingerprint authentication enabled" : "Fingerprint authentication disabled",
+              body: value
+                ? "Fingerprint authentication enabled"
+                : "Fingerprint authentication disabled",
               sound: true,
             },
             trigger: null,
@@ -113,27 +111,6 @@ const Profile = () => {
         shouldShowList: true,
       }),
     });
-  }, []);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await AsyncStorage.getItem("user");
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-          setFullName(parsedUser.name || "");
-          setPhone(parsedUser.phone || "");
-        }
-
-        const fingerSetting = await AsyncStorage.getItem("finger");
-        setIsFingerEnabled(fingerSetting === "1");
-      } catch (error) {
-        console.error("Error loading user data:", error);
-      }
-    };
-
-    loadUser();
   }, []);
 
   const handleUpdatePassword = async () => {
@@ -165,7 +142,7 @@ const Profile = () => {
       if (!userData) return;
       const parsedUser = JSON.parse(userData);
 
-      const loginRes = await fetch("https://api.rahausub.com.ng/login.php", {
+      const loginRes = await fetch(endPoints.login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -188,7 +165,7 @@ const Profile = () => {
       await AsyncStorage.setItem("finger", loginData.finger);
 
       // 2️⃣ Now Update to New Password using the FRESH token
-      const response = await fetch("https://api.rahausub.com.ng/setPasswords.php", {
+      const response = await fetch(endPoints.setPassword, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -201,7 +178,9 @@ const Profile = () => {
       const data = await response.json();
       if (data.success) {
         // Play success vibration
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        await Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success,
+        );
 
         setAlertTitle("Success");
         setAlertMessage("Password updated successfully");
@@ -233,7 +212,7 @@ const Profile = () => {
       if (!userData) return;
       const parsedUser = JSON.parse(userData);
 
-      const response = await fetch("https://api.rahausub.com.ng/login.php", {
+      const response = await fetch(endPoints.login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -248,7 +227,7 @@ const Profile = () => {
         await AsyncStorage.setItem("user", JSON.stringify(data.user));
         await AsyncStorage.setItem("userToken", data.token);
         await AsyncStorage.setItem("finger", data.finger);
-        
+
         setPinVerifyModal(false);
         setVerificationPassword("");
         router.push("/Dashboard/set-pin");
@@ -278,7 +257,12 @@ const Profile = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -289,80 +273,151 @@ const Profile = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.headerLink}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>My Profile</Text>
-            <TouchableOpacity>
-              <Text style={styles.headerLink}>Help</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+          {/* HEADER */}
+          <Header title="My Profile" />
 
           <View style={styles.content}>
             <View style={styles.avatarWrap}>
               <Image source={Avatar} style={styles.avatarImage} />
             </View>
-            <Text style={[styles.name, { color: colors.text }]}>{user?.name}</Text>
-            <Text style={[styles.phone, { color: colors.textMuted }]}>{user?.email}</Text>
+            <Text style={[styles.name, { color: colors.text }]}>
+              {user?.name}
+            </Text>
+            <Text style={[styles.phone, { color: colors.textMuted }]}>
+              {user?.email}
+            </Text>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal info</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Personal info
+            </Text>
 
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.infoLeft}>
-                <Text style={[styles.infoLabel, { color: colors.text }]}>Full Name</Text>
-                <Text style={[styles.infoValue, { color: colors.textMuted }]}>{fullName}</Text>
+                <Text style={[styles.infoLabel, { color: colors.text }]}>
+                  Full Name
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.textMuted }]}>
+                  {user?.name}
+                </Text>
               </View>
             </View>
 
-
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.infoLeft}>
-                <Text style={[styles.infoLabel, { color: colors.text }]}>Email Address</Text>
-                <Text style={[styles.infoValue, { color: colors.textMuted }]}>{user?.email}</Text>
+                <Text style={[styles.infoLabel, { color: colors.text }]}>
+                  Email Address
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.textMuted }]}>
+                  {user?.email}
+                </Text>
               </View>
             </View>
 
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.infoLeft}>
-                <Text style={[styles.infoLabel, { color: colors.text }]}>Phone</Text>
-                <Text style={[styles.infoValue, { color: colors.textMuted }]}>{phone}</Text>
+                <Text style={[styles.infoLabel, { color: colors.text }]}>
+                  Phone
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.textMuted }]}>
+                  {user?.phone}
+                </Text>
               </View>
             </View>
+            <TouchableOpacity
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              onPress={() => router.push("/Dashboard/referral-screen")}
+            >
+              <View style={[styles.infoLeft]}>
+                <View style={[styles.infoLeft]}>
+                  <Text style={[styles.infoLabel, { color: colors.text }]}>
+                    My Referral
+                  </Text>
+                </View>
+                <Text style={[styles.infoValue, { color: colors.textMuted }]}>
+                  Referrals, commissions
+                </Text>
+              </View>
 
+              <Ionicons name="arrow-forward" color={colors.text} />
+            </TouchableOpacity>
 
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Security Settings
+            </Text>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Security Settings</Text>
-
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.infoLeft}>
-                <Text style={[styles.infoLabel, { color: colors.text }]}>Login Password</Text>
-                <Text style={[styles.infoValue, { color: colors.textMuted }]}>****</Text>
+                <Text style={[styles.infoLabel, { color: colors.text }]}>
+                  Login Password
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.textMuted }]}>
+                  ****
+                </Text>
               </View>
               <TouchableOpacity onPress={() => setPasswordModal(true)}>
-                <Text style={[styles.infoAction, { color: colors.icon }]}>Update</Text>
+                <Text style={[styles.infoAction, { color: colors.icon }]}>
+                  Update
+                </Text>
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.infoLeft}>
-                <Text style={[styles.infoLabel, { color: colors.text }]}>Transaction Pin</Text>
-                <Text style={[styles.infoValue, { color: colors.textMuted }]}>****</Text>
+                <Text style={[styles.infoLabel, { color: colors.text }]}>
+                  Transaction Pin
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.textMuted }]}>
+                  ****
+                </Text>
               </View>
               <TouchableOpacity onPress={() => setPinVerifyModal(true)}>
-                <Text style={[styles.infoAction, { color: colors.icon }]}>Update</Text>
+                <Text style={[styles.infoAction, { color: colors.icon }]}>
+                  Update
+                </Text>
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.infoLeft}>
-                <Text style={[styles.infoLabel, { color: colors.text }]}>Fingerprint Locking</Text>
-                <Text style={[styles.infoValue, { color: colors.textMuted }]}>Use biometric for faster payments</Text>
+                <Text style={[styles.infoLabel, { color: colors.text }]}>
+                  Fingerprint Locking
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.textMuted }]}>
+                  Use biometric for faster payments
+                </Text>
               </View>
               <Switch
                 value={isFingerEnabled}
@@ -372,12 +427,23 @@ const Profile = () => {
               />
             </View>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Appearance
+            </Text>
 
-            <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.infoCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.infoLeft}>
-                <Text style={[styles.infoLabel, { color: colors.text }]}>Dark Mode</Text>
-                <Text style={[styles.infoValue, { color: colors.textMuted }]}>Switch between light and dark themes</Text>
+                <Text style={[styles.infoLabel, { color: colors.text }]}>
+                  Dark Mode
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.textMuted }]}>
+                  Switch between light and dark themes
+                </Text>
               </View>
               <Switch
                 value={isDark}
@@ -449,14 +515,23 @@ const Profile = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Update Password</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Update Password
+          </Text>
           <TextInput
             value={currentPassword}
             onChangeText={setCurrentPassword}
             placeholder="Current Password"
             placeholderTextColor={colors.textMuted}
             secureTextEntry
-            style={[styles.modalInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+            style={[
+              styles.modalInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.inputBorder,
+                color: colors.text,
+              },
+            ]}
           />
           <TextInput
             value={password}
@@ -464,7 +539,14 @@ const Profile = () => {
             placeholder="New Password"
             placeholderTextColor={colors.textMuted}
             secureTextEntry
-            style={[styles.modalInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+            style={[
+              styles.modalInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.inputBorder,
+                color: colors.text,
+              },
+            ]}
           />
           <TextInput
             value={confirmPassword}
@@ -472,10 +554,21 @@ const Profile = () => {
             placeholder="Confirm Password"
             placeholderTextColor={colors.textMuted}
             secureTextEntry
-            style={[styles.modalInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+            style={[
+              styles.modalInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.inputBorder,
+                color: colors.text,
+              },
+            ]}
           />
           <TouchableOpacity
-            style={[styles.modalButton, { backgroundColor: colors.primary }, isLoading && { opacity: 0.7 }]}
+            style={[
+              styles.modalButton,
+              { backgroundColor: colors.primary },
+              isLoading && { opacity: 0.7 },
+            ]}
             onPress={handleUpdatePassword}
             disabled={isLoading}
           >
@@ -492,18 +585,33 @@ const Profile = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Security Check</Text>
-          <Text style={[styles.modalSubtitle, { color: colors.textMuted }]}>Please enter your login password to update PIN</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Security Check
+          </Text>
+          <Text style={[styles.modalSubtitle, { color: colors.textMuted }]}>
+            Please enter your login password to update PIN
+          </Text>
           <TextInput
             value={verificationPassword}
             onChangeText={setVerificationPassword}
             placeholder="Login Password"
             placeholderTextColor={colors.textMuted}
             secureTextEntry
-            style={[styles.modalInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+            style={[
+              styles.modalInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.inputBorder,
+                color: colors.text,
+              },
+            ]}
           />
           <TouchableOpacity
-            style={[styles.modalButton, { backgroundColor: colors.primary }, isLoading && { opacity: 0.7 }]}
+            style={[
+              styles.modalButton,
+              { backgroundColor: colors.primary },
+              isLoading && { opacity: 0.7 },
+            ]}
             onPress={handleVerifyPasswordBeforePin}
             disabled={isLoading}
           >
@@ -520,19 +628,38 @@ const Profile = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Log Out</Text>
-          <Text style={[styles.modalSubtitle, { color: colors.textMuted }]}>Are you sure you want to log out of your account?</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Log Out
+          </Text>
+          <Text style={[styles.modalSubtitle, { color: colors.textMuted }]}>
+            Are you sure you want to log out of your account?
+          </Text>
           <TouchableOpacity
-            style={[styles.modalButton, { backgroundColor: "#d14343", marginBottom: 10 }]}
-            onPress={() => { setLogoutModal(false); handleLogout(); }}
+            style={[
+              styles.modalButton,
+              { backgroundColor: "#d14343", marginBottom: 10 },
+            ]}
+            onPress={() => {
+              setLogoutModal(false);
+              handleLogout();
+            }}
           >
             <Text style={styles.modalButtonText}>Yes, Log Out</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modalButton, { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border }]}
+            style={[
+              styles.modalButton,
+              {
+                backgroundColor: colors.surface,
+                borderWidth: 1.5,
+                borderColor: colors.border,
+              },
+            ]}
             onPress={() => setLogoutModal(false)}
           >
-            <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+            <Text style={[styles.modalButtonText, { color: colors.text }]}>
+              Cancel
+            </Text>
           </TouchableOpacity>
         </View>
       </Modal>

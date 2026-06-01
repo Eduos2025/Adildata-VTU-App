@@ -1,3 +1,4 @@
+import { endPoints } from "@/constants/urls";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -5,6 +6,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -18,8 +20,9 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AlertModal from "../components/AlertModal";
 import { useTheme } from "../../context/ThemeContext";
+import AlertModal from "../components/AlertModal";
+import Header from "../components/header";
 
 const exams = [
   { id: "waec", label: "WAEC", logo: require("@/assets/images/waec.png") },
@@ -104,7 +107,7 @@ const Exams = () => {
       resetForm();
       loadFinger();
       return undefined;
-    }, [])
+    }, []),
   );
 
   const handleFingerprintPay = async () => {
@@ -164,22 +167,19 @@ const Exams = () => {
       let allPins: any[] = [];
 
       for (let i = 0; i < Number(selectedQty); i++) {
-        const response = await fetch(
-          "https://api.rahausub.com.ng/buyEducationPin.php",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              token,
-              service: selectedExam?.id,
-              number: "08000000000", // you can replace with user phone
-              pin: userPin,
-              profileId: selectedExam?.id === "jamb" ? profileId : undefined,
-            }),
+        const response = await fetch(endPoints.buyEducationPin, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({
+            token,
+            service: selectedExam?.id,
+            number: "08000000000", // you can replace with user phone
+            pin: userPin,
+            profileId: selectedExam?.id === "jamb" ? profileId : undefined,
+          }),
+        });
 
         const res = await response.json();
 
@@ -216,7 +216,12 @@ const Exams = () => {
     }
   };
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -227,23 +232,13 @@ const Exams = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.headerLink}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Exams Tokens</Text>
-            <TouchableOpacity>
-              <Text style={styles.headerLink}>Help</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+        {/* HEADER */}
+          <Header title="Exam Tokens" />
 
           <View style={styles.content}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Choose Exams Type</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Choose Exams Type
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -258,8 +253,14 @@ const Exams = () => {
                     activeOpacity={0.8}
                     style={[
                       styles.networkCard,
-                      { backgroundColor: colors.surface, borderColor: colors.border },
-                      isActive && [styles.networkCardActive, { borderColor: colors.primary }],
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                      },
+                      isActive && [
+                        styles.networkCardActive,
+                        { borderColor: colors.primary },
+                      ],
                     ]}
                   >
                     <Image source={item.logo} style={styles.networkLogo} />
@@ -268,9 +269,17 @@ const Exams = () => {
               })}
             </ScrollView>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Or Select Here</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Or Select Here
+            </Text>
             <TouchableOpacity
-              style={[styles.selectInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}
+              style={[
+                styles.selectInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               onPress={() => setExamModal(true)}
               activeOpacity={0.8}
             >
@@ -278,42 +287,73 @@ const Exams = () => {
                 style={[
                   styles.selectText,
                   { color: colors.text },
-                  !selectedExam && [styles.selectPlaceholder, { color: colors.textMuted }],
+                  !selectedExam && [
+                    styles.selectPlaceholder,
+                    { color: colors.textMuted },
+                  ],
                 ]}
               >
                 {selectedExam?.label ?? "Choose an exam"}
               </Text>
               <Ionicons name="chevron-down" size={18} color={colors.accent} />
             </TouchableOpacity>
- 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Quantity</Text>
+
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Quantity
+            </Text>
             <TouchableOpacity
-              style={[styles.selectInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}
+              style={[
+                styles.selectInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               onPress={() => setQtyModal(true)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.selectText, { color: colors.text }]}>{selectedQty ?? "1"}</Text>
+              <Text style={[styles.selectText, { color: colors.text }]}>
+                {selectedQty ?? "1"}
+              </Text>
               <Ionicons name="chevron-down" size={18} color={colors.accent} />
             </TouchableOpacity>
- 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Amount</Text>
+
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Amount
+            </Text>
             <TextInput
               placeholder=""
               value={amount}
               onChangeText={setAmount}
               placeholderTextColor={colors.textMuted}
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
             />
 
             {selectedExam?.id === "jamb" && (
               <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>JAMB Profile ID</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  JAMB Profile ID
+                </Text>
                 <TextInput
                   placeholder="Enter profile ID"
                   value={profileId}
                   onChangeText={setProfileId}
                   placeholderTextColor={colors.textMuted}
-                  style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                      color: colors.text,
+                    },
+                  ]}
                 />
               </>
             )}
@@ -350,7 +390,9 @@ const Exams = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Select Exam</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Select Exam
+          </Text>
           {exams.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -361,7 +403,9 @@ const Exams = () => {
               }}
             >
               <Image source={item.logo} style={styles.modalLogo} />
-              <Text style={[styles.modalItemText, { color: colors.text }]}>{item.label}</Text>
+              <Text style={[styles.modalItemText, { color: colors.text }]}>
+                {item.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -373,7 +417,9 @@ const Exams = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Select Quantity</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Select Quantity
+          </Text>
           {quantities.map((qty) => (
             <TouchableOpacity
               key={qty}
@@ -383,7 +429,9 @@ const Exams = () => {
                 setQtyModal(false);
               }}
             >
-              <Text style={[styles.modalItemText, { color: colors.text }]}>{qty}</Text>
+              <Text style={[styles.modalItemText, { color: colors.text }]}>
+                {qty}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -401,8 +449,12 @@ const Exams = () => {
           >
             <View style={styles.confirmHeader}>
               <View>
-                <Text style={[styles.confirmTitle, { color: colors.text }]}>Confirm and Pay</Text>
-                <Text style={[styles.confirmSubtitle, { color: colors.textMuted }]}>
+                <Text style={[styles.confirmTitle, { color: colors.text }]}>
+                  Confirm and Pay
+                </Text>
+                <Text
+                  style={[styles.confirmSubtitle, { color: colors.textMuted }]}
+                >
                   if transaction was successfully, no refund!
                 </Text>
               </View>
@@ -411,38 +463,86 @@ const Exams = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.confirmBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.confirmBox,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Exam Type:</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Exam Type:
+                </Text>
                 <Text style={[styles.confirmValue, { color: colors.text }]}>
                   {selectedExam?.label ?? "-"}
                 </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Quantity:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{selectedQty ?? "-"}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Quantity:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {selectedQty ?? "-"}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Amount</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{amount || "-"}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Amount
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {amount || "-"}
+                </Text>
               </View>
             </View>
 
-            <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.surface : "#f8fbff", borderColor: colors.border }]}>
-              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
+            <View
+              style={[
+                styles.balanceCard,
+                {
+                  backgroundColor: isDark ? colors.surface : "#f8fbff",
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
+                Wallet Balance
+              </Text>
               <View style={styles.balanceRow}>
-                <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>Balance</Text>
-                <Text style={[styles.balanceValue, { color: colors.primary }]}>₦32,500.00</Text>
+                <Text
+                  style={[styles.balanceSmall, { color: colors.textMuted }]}
+                >
+                  Balance
+                </Text>
+                <Text style={[styles.balanceValue, { color: colors.primary }]}>
+                  ₦32,500.00
+                </Text>
               </View>
             </View>
 
             <View style={styles.confirmActions}>
               <TouchableOpacity
-                style={[styles.cancelButton, { backgroundColor: isDark ? colors.surface : "#f1f5f9", borderColor: colors.secondary }]}
+                style={[
+                  styles.cancelButton,
+                  {
+                    backgroundColor: isDark ? colors.surface : "#f1f5f9",
+                    borderColor: colors.secondary,
+                  },
+                ]}
                 onPress={() => setConfirmVisible(false)}
                 activeOpacity={0.85}
               >
-                <Text style={[styles.cancelText, { color: colors.secondary }]}>Cancel</Text>
+                <Text style={[styles.cancelText, { color: colors.secondary }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.payButton}
@@ -471,16 +571,22 @@ const Exams = () => {
         onBackdropPress={() => setPinVisible(false)}
         style={styles.pinModal}
       >
-        <View style={[styles.pinScreen, { backgroundColor: colors.background }]}>
+        <View
+          style={[styles.pinScreen, { backgroundColor: colors.background }]}
+        >
           <TouchableOpacity
             onPress={() => setPinVisible(false)}
             style={styles.pinBack}
           >
-            <Text style={[styles.pinBackText, { color: colors.primary }]}>Back</Text>
+            <Text style={[styles.pinBackText, { color: colors.primary }]}>
+              Back
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.pinContent}>
-            <Text style={[styles.pinTitle, { color: colors.text }]}>Enter Passcode</Text>
+            <Text style={[styles.pinTitle, { color: colors.text }]}>
+              Enter Passcode
+            </Text>
 
             <View style={styles.pinDots}>
               {[0, 1, 2, 3].map((idx) => (
@@ -489,12 +595,21 @@ const Exams = () => {
                   style={[
                     styles.pinDot,
                     { backgroundColor: colors.border },
-                    pin.length > idx && [styles.pinDotActive, { backgroundColor: colors.primary }],
+                    pin.length > idx && [
+                      styles.pinDotActive,
+                      { backgroundColor: colors.primary },
+                    ],
                   ]}
                 />
               ))}
             </View>
-            {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />}
+            {loading && (
+              <ActivityIndicator
+                size="large"
+                color={colors.primary}
+                style={{ marginTop: 20 }}
+              />
+            )}
           </View>
 
           <View style={styles.pinBottom}>
@@ -502,24 +617,40 @@ const Exams = () => {
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                 <TouchableOpacity
                   key={`key-${num}`}
-                  style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                  style={[
+                    styles.keyButton,
+                    { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                  ]}
                   onPress={() => {
                     setPin((prev) =>
                       prev.length < 4 ? `${prev}${num}` : prev,
                     );
                   }}
                 >
-                  <Text style={[styles.keyText, { color: colors.text }]}>{num}</Text>
+                  <Text style={[styles.keyText, { color: colors.text }]}>
+                    {num}
+                  </Text>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
                 onPress={() => setPin((prev) => prev.slice(0, -1))}
               >
-                <Ionicons name="backspace-outline" size={20} color={colors.primary} />
+                <Ionicons
+                  name="backspace-outline"
+                  size={20}
+                  color={colors.primary}
+                />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                style={[
+                  styles.keyButton,
+                  { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                ]}
                 onPress={() => {
                   setPin((prev) => (prev.length < 4 ? `${prev}0` : prev));
                 }}
@@ -527,7 +658,11 @@ const Exams = () => {
                 <Text style={[styles.keyText, { color: colors.text }]}>0</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                ]}
                 onPress={() => {
                   if (pin.length < 4) {
                     setAlertTitle("Incomplete PIN");
@@ -553,7 +688,9 @@ const Exams = () => {
                 onPress={handleFingerprintPay}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.fingerprintText, { color: colors.textMuted }]}>
+                <Text
+                  style={[styles.fingerprintText, { color: colors.textMuted }]}
+                >
                   Pay with finger print
                 </Text>
                 <Image

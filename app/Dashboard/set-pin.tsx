@@ -1,20 +1,21 @@
+import { endPoints } from "@/constants/urls";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Haptics from "expo-haptics";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   BackHandler,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AlertModal from "../components/AlertModal";
 import { useTheme } from "../../context/ThemeContext";
+import AlertModal from "../components/AlertModal";
 
 const SetPin = () => {
   const { isDark, colors } = useTheme();
@@ -55,7 +56,7 @@ const SetPin = () => {
         return;
       }
 
-      const response = await fetch("https://api.rahausub.com.ng/setPin.php", {
+      const response = await fetch(endPoints.setPin, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -74,7 +75,9 @@ const SetPin = () => {
         }
 
         // Play success vibration
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        await Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success,
+        );
 
         setAlertTitle("Success");
         setAlertMessage(json.message || "PIN set successfully.");
@@ -98,11 +101,15 @@ const SetPin = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.pinContent}>
-          <Text style={[styles.title, { color: colors.text }]}>Set Transaction PIN</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            Set Transaction PIN
+          </Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             Please set a 4-digit transaction pin to complete your account setup.
           </Text>
@@ -114,7 +121,10 @@ const SetPin = () => {
                 style={[
                   styles.pinDot,
                   { backgroundColor: colors.border },
-                  pin.length > idx && [styles.pinDotActive, { backgroundColor: colors.primary }],
+                  pin.length > idx && [
+                    styles.pinDotActive,
+                    { backgroundColor: colors.primary },
+                  ],
                 ]}
               />
             ))}
@@ -126,25 +136,47 @@ const SetPin = () => {
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
               <TouchableOpacity
                 key={`key-${num}`}
-                style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#ffffff", borderColor: colors.border }]}
+                style={[
+                  styles.keyButton,
+                  {
+                    backgroundColor: isDark ? colors.surface : "#ffffff",
+                    borderColor: colors.border,
+                  },
+                ]}
                 onPress={() => {
                   setPin((prev) => (prev.length < 4 ? `${prev}${num}` : prev));
                 }}
                 disabled={isLoading}
               >
-                <Text style={[styles.keyText, { color: colors.text }]}>{num}</Text>
+                <Text style={[styles.keyText, { color: colors.text }]}>
+                  {num}
+                </Text>
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+              style={[
+                styles.keyButton,
+                styles.keyButtonGhost,
+                { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+              ]}
               onPress={() => setPin((prev) => prev.slice(0, -1))}
               disabled={isLoading}
             >
-              <Ionicons name="backspace-outline" size={20} color={colors.primary} />
+              <Ionicons
+                name="backspace-outline"
+                size={20}
+                color={colors.primary}
+              />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#ffffff", borderColor: colors.border }]}
+              style={[
+                styles.keyButton,
+                {
+                  backgroundColor: isDark ? colors.surface : "#ffffff",
+                  borderColor: colors.border,
+                },
+              ]}
               onPress={() => {
                 setPin((prev) => (prev.length < 4 ? `${prev}0` : prev));
               }}
@@ -153,14 +185,22 @@ const SetPin = () => {
               <Text style={[styles.keyText, { color: colors.text }]}>0</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+              style={[
+                styles.keyButton,
+                styles.keyButtonGhost,
+                { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+              ]}
               onPress={handleSubmitPin}
               disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Ionicons name="arrow-forward" size={20} color={colors.primary} />
+                <Ionicons
+                  name="arrow-forward"
+                  size={20}
+                  color={colors.primary}
+                />
               )}
             </TouchableOpacity>
           </View>

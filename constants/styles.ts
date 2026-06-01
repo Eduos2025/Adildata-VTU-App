@@ -4,17 +4,21 @@ export const styles = StyleSheet.create({
   LogoImg: {
     width: 300,
     overflow: "hidden",
-    height: 140,
+    height: 150,
     borderRadius: 10,
-    // backgroundColor:"midnightblue"
+    // backgroundColor: "midnightblue",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   LogoImgB: {
-    width: "40%",
-    height: "40%",
+    width: "100%",
+    height: "100%",
     marginHorizontal: "auto",
     borderRadius: 10,
     margin: 0,
+    objectFit: "contain",
   },
 
   titleText: {

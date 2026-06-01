@@ -1,3 +1,4 @@
+import { endPoints } from "@/constants/urls";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,8 +21,9 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AlertModal from "../components/AlertModal";
 import { useTheme } from "../../context/ThemeContext";
+import AlertModal from "../components/AlertModal";
+import Header from "../components/header";
 
 const networks = [
   { id: "mtn", label: "MTN", logo: require("@/assets/images/mtn.png") },
@@ -48,7 +50,7 @@ const mapNetworkFromAPI = (apiNetwork: any): string | null => {
       "etisalat nigeria": "etisalat",
       "t2 mobile nigeria": "etisalat",
       "9mobile": "etisalat",
-      "etisalat": "etisalat",
+      etisalat: "etisalat",
     };
     const key = apiNetwork.toLowerCase().trim();
     return networkMap[key] || null;
@@ -146,17 +148,14 @@ const DataPage = () => {
       const userToken = await AsyncStorage.getItem("userToken");
       if (!userToken) return;
 
-      const response = await fetch(
-        "https://api.rahausub.com.ng/getDataTypes.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: userToken,
-            serviceID: `${networkId}-data`
-          }),
-        }
-      );
+      const response = await fetch(endPoints.getDataTypes, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: userToken,
+          serviceID: `${networkId}-data`,
+        }),
+      });
 
       const text = await response.text();
       try {
@@ -169,7 +168,7 @@ const DataPage = () => {
               name: t.name || t,
               id: t.id,
               plan_id: t.plan_id || t.id, // Support different ID aliases
-            }))
+            })),
           ];
           setDataTypes(formattedTypes);
         }
@@ -198,7 +197,7 @@ const DataPage = () => {
       const userToken = await AsyncStorage.getItem("userToken");
       if (!userToken) return;
 
-      const response = await fetch("https://api.rahausub.com.ng/getBalance.php", {
+      const response = await fetch(endPoints.getBalance, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: userToken }),
@@ -223,17 +222,17 @@ const DataPage = () => {
       let response;
 
       if (!typeObj || typeObj.name === "DATA BUNDLE") {
-        const url = `https://api.rahausub.com.ng/getDataPlans.php?network=${networkId}-data`;
+        const url = `${endPoints.getDataPlans}?network=${networkId}-data`;
         response = await fetch(url);
       } else {
         // Fetch from getOtherData.php for dynamic types
         const userToken = await AsyncStorage.getItem("userToken");
-        response = await fetch("https://api.rahausub.com.ng/getOtherData.php", {
+        response = await fetch(endPoints.getOtherData, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             token: userToken,
-            plan_id: typeObj.id
+            plan_id: typeObj.id,
           }),
         });
       }
@@ -272,13 +271,13 @@ const DataPage = () => {
         }
       };
       loadFinger();
-    }, [])
+    }, []),
   );
 
   // Detect Network Function
   const detectNetwork = async (phone: string) => {
     try {
-      const res = await fetch("https://api.rahausub.com.ng/detectNetwork.php", {
+      const res = await fetch(endPoints.detectNetwork, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -388,25 +387,23 @@ const DataPage = () => {
       }
 
       const isStandardBundle = selectedType?.name === "DATA BUNDLE";
-      const url = isStandardBundle
-        ? "https://api.rahausub.com.ng/buyData.php"
-        : "https://api.rahausub.com.ng/buyOtherData.php";
+      const url = isStandardBundle ? endPoints.buyData : endPoints.buyOtherData;
 
       const payload = isStandardBundle
         ? {
-          token: userToken,
-          amount: selectedPlan!.amount,
-          number: phoneNumber,
-          serviceID: `${selectedNetwork!.id}-data`,
-          variation: selectedPlan!.plan_id,
-          pin: pin || "fingerprint",
-        }
+            token: userToken,
+            amount: selectedPlan!.amount,
+            number: phoneNumber,
+            serviceID: `${selectedNetwork!.id}-data`,
+            variation: selectedPlan!.plan_id,
+            pin: pin || "fingerprint",
+          }
         : {
-          token: userToken,
-          number: phoneNumber,
-          plan_id: selectedPlan!.id,
-          pin: pin || "fingerprint",
-        };
+            token: userToken,
+            number: phoneNumber,
+            plan_id: selectedPlan!.id,
+            pin: pin || "fingerprint",
+          };
 
       const response = await fetch(url, {
         method: "POST",
@@ -447,25 +444,23 @@ const DataPage = () => {
       }
 
       const isStandardBundle = selectedType?.name === "DATA BUNDLE";
-      const url = isStandardBundle
-        ? "https://api.rahausub.com.ng/buyData.php"
-        : "https://api.rahausub.com.ng/buyOtherData.php";
+      const url = isStandardBundle ? endPoints.buyData : endPoints.buyOtherData;
 
       const payload = isStandardBundle
         ? {
-          token: userToken,
-          amount: selectedPlan!.amount,
-          number: phoneNumber,
-          serviceID: `${selectedNetwork!.id}-data`,
-          variation: selectedPlan!.plan_id,
-          pin: pin,
-        }
+            token: userToken,
+            amount: selectedPlan!.amount,
+            number: phoneNumber,
+            serviceID: `${selectedNetwork!.id}-data`,
+            variation: selectedPlan!.plan_id,
+            pin: pin,
+          }
         : {
-          token: userToken,
-          number: phoneNumber,
-          plan_id: selectedPlan!.id,
-          pin: pin,
-        };
+            token: userToken,
+            number: phoneNumber,
+            plan_id: selectedPlan!.id,
+            pin: pin,
+          };
 
       const response = await fetch(url, {
         method: "POST",
@@ -494,7 +489,12 @@ const DataPage = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -505,24 +505,22 @@ const DataPage = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.headerLink}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Buy Data</Text>
-            <TouchableOpacity>
-              <Text style={styles.headerLink}>Help</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+         {/* HEADER */}
+          <Header title="Buy Data" />
 
           <View style={styles.content}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Customer Phone Number</Text>
-            <View style={[styles.phoneInputWrapper, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Customer Phone Number
+            </Text>
+            <View
+              style={[
+                styles.phoneInputWrapper,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
+            >
               <TextInput
                 placeholder=""
                 keyboardType="phone-pad"
@@ -543,7 +541,11 @@ const DataPage = () => {
                   onPress={resetForm}
                   style={styles.loadingIndicator}
                 >
-                  <Ionicons name="close-circle" size={20} color={colors.textMuted} />
+                  <Ionicons
+                    name="close-circle"
+                    size={20}
+                    color={colors.textMuted}
+                  />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -557,7 +559,11 @@ const DataPage = () => {
                   {selectedNetwork ? (
                     <TouchableOpacity
                       activeOpacity={0.8}
-                      style={[styles.networkCard, styles.networkCardActive, { borderColor: colors.primary }]}
+                      style={[
+                        styles.networkCard,
+                        styles.networkCardActive,
+                        { borderColor: colors.primary },
+                      ]}
                     >
                       <Image
                         source={selectedNetwork.logo}
@@ -569,7 +575,13 @@ const DataPage = () => {
                       <TouchableOpacity
                         key={net.id}
                         activeOpacity={0.8}
-                        style={[styles.networkCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                        style={[
+                          styles.networkCard,
+                          {
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                          },
+                        ]}
                         onPress={() => {
                           setSelectedNetwork(net);
                           setManualListing(false);
@@ -582,9 +594,17 @@ const DataPage = () => {
                   )}
                 </View>
 
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Type</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Type
+                </Text>
                 <TouchableOpacity
-                  style={[styles.selectInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}
+                  style={[
+                    styles.selectInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                    },
+                  ]}
                   onPress={() => setTypeModal(true)}
                   activeOpacity={0.8}
                 >
@@ -592,36 +612,66 @@ const DataPage = () => {
                     style={[
                       styles.selectText,
                       { color: colors.text },
-                      !selectedType && [styles.selectPlaceholder, { color: colors.textMuted }],
+                      !selectedType && [
+                        styles.selectPlaceholder,
+                        { color: colors.textMuted },
+                      ],
                     ]}
                   >
                     {selectedType?.name ?? "Choose a type"}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color={colors.accent} />
+                  <Ionicons
+                    name="chevron-down"
+                    size={18}
+                    color={colors.accent}
+                  />
                 </TouchableOpacity>
 
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Data Bundle</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Data Bundle
+                </Text>
                 <TouchableOpacity
-                  style={[styles.selectInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}
+                  style={[
+                    styles.selectInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                    },
+                  ]}
                   onPress={() => setPlanModal(true)}
                   activeOpacity={0.8}
                   disabled={fetchingPlans}
                 >
-                  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
                     <Text
                       style={[
                         styles.selectText,
                         { color: colors.text },
-                        !selectedPlan && [styles.selectPlaceholder, { color: colors.textMuted }],
+                        !selectedPlan && [
+                          styles.selectPlaceholder,
+                          { color: colors.textMuted },
+                        ],
                       ]}
                     >
-                      {fetchingPlans ? "Fetching plans..." : (selectedPlan?.name ?? "Choose a bundle")}
+                      {fetchingPlans
+                        ? "Fetching plans..."
+                        : (selectedPlan?.name ?? "Choose a bundle")}
                     </Text>
                   </View>
                   {fetchingPlans ? (
                     <ActivityIndicator size="small" color={colors.accent} />
                   ) : (
-                    <Ionicons name="chevron-down" size={18} color={colors.accent} />
+                    <Ionicons
+                      name="chevron-down"
+                      size={18}
+                      color={colors.accent}
+                    />
                   )}
                 </TouchableOpacity>
               </>
@@ -670,7 +720,9 @@ const DataPage = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Select Type</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Select Type
+          </Text>
           {dataTypes.map((type) => (
             <TouchableOpacity
               key={type.name}
@@ -688,7 +740,9 @@ const DataPage = () => {
                 }
               }}
             >
-              <Text style={[styles.modalItemText, { color: colors.text }]}>{type.name}</Text>
+              <Text style={[styles.modalItemText, { color: colors.text }]}>
+                {type.name}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -700,7 +754,9 @@ const DataPage = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Select Data Bundle</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Select Data Bundle
+          </Text>
           <ScrollView style={{ maxHeight: 400 }}>
             {plans.map((plan, index) => (
               <TouchableOpacity
@@ -721,13 +777,22 @@ const DataPage = () => {
                     gap: 12,
                   }}
                 >
-                  <Text style={[styles.modalItemText, { flex: 1, color: colors.text }]}>
+                  <Text
+                    style={[
+                      styles.modalItemText,
+                      { flex: 1, color: colors.text },
+                    ]}
+                  >
                     {cleanDataPlanName(plan.name)}
                   </Text>
                   <Text
                     style={[
                       styles.modalItemText,
-                      { fontWeight: "700", color: colors.accent, flexShrink: 0 },
+                      {
+                        fontWeight: "700",
+                        color: colors.accent,
+                        flexShrink: 0,
+                      },
                     ]}
                   >
                     ₦{Number(plan.amount).toLocaleString()}
@@ -751,8 +816,12 @@ const DataPage = () => {
           >
             <View style={styles.confirmHeader}>
               <View>
-                <Text style={[styles.confirmTitle, { color: colors.text }]}>Confirm and Pay</Text>
-                <Text style={[styles.confirmSubtitle, { color: colors.textMuted }]}>
+                <Text style={[styles.confirmTitle, { color: colors.text }]}>
+                  Confirm and Pay
+                </Text>
+                <Text
+                  style={[styles.confirmSubtitle, { color: colors.textMuted }]}
+                >
                   if transaction was successfully, no refund!
                 </Text>
               </View>
@@ -761,37 +830,85 @@ const DataPage = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.confirmBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.confirmBox,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Network:</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Network:
+                </Text>
                 <Text style={[styles.confirmValue, { color: colors.text }]}>
                   {selectedNetwork?.label ?? "-"}
                 </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Type:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{selectedType?.name ?? "-"}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Type:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {selectedType?.name ?? "-"}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Plan:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{selectedPlan?.name ?? "-"}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Plan:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {selectedPlan?.name ?? "-"}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Phone Number:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{phoneNumber || "-"}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Phone Number:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {phoneNumber || "-"}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Amount:</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Amount:
+                </Text>
                 <Text style={[styles.confirmValue, { color: colors.text }]}>
                   ₦{Number(selectedPlan?.amount || 0).toLocaleString()}
                 </Text>
               </View>
             </View>
 
-            <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.surface : "#f8fafc", borderColor: colors.border }]}>
-              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
+            <View
+              style={[
+                styles.balanceCard,
+                {
+                  backgroundColor: isDark ? colors.surface : "#f8fafc",
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
+                Wallet Balance
+              </Text>
               <View style={styles.balanceRow}>
-                <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>Balance</Text>
+                <Text
+                  style={[styles.balanceSmall, { color: colors.textMuted }]}
+                >
+                  Balance
+                </Text>
                 <Text style={[styles.balanceValue, { color: colors.primary }]}>
                   ₦{balance.toLocaleString()}
                 </Text>
@@ -800,11 +917,19 @@ const DataPage = () => {
 
             <View style={styles.confirmActions}>
               <TouchableOpacity
-                style={[styles.cancelButton, { backgroundColor: isDark ? colors.surface : "#f1f5f9", borderColor: colors.secondary }]}
+                style={[
+                  styles.cancelButton,
+                  {
+                    backgroundColor: isDark ? colors.surface : "#f1f5f9",
+                    borderColor: colors.secondary,
+                  },
+                ]}
                 onPress={() => setConfirmVisible(false)}
                 activeOpacity={0.85}
               >
-                <Text style={[styles.cancelText, { color: colors.secondary }]}>Cancel</Text>
+                <Text style={[styles.cancelText, { color: colors.secondary }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.payButton}
@@ -842,16 +967,22 @@ const DataPage = () => {
         onBackdropPress={() => setPinVisible(false)}
         style={styles.pinModal}
       >
-        <View style={[styles.pinScreen, { backgroundColor: colors.background }]}>
+        <View
+          style={[styles.pinScreen, { backgroundColor: colors.background }]}
+        >
           <TouchableOpacity
             onPress={() => setPinVisible(false)}
             style={styles.pinBack}
           >
-            <Text style={[styles.pinBackText, { color: colors.primary }]}>Back</Text>
+            <Text style={[styles.pinBackText, { color: colors.primary }]}>
+              Back
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.pinContent}>
-            <Text style={[styles.pinTitle, { color: colors.text }]}>Enter Passcode</Text>
+            <Text style={[styles.pinTitle, { color: colors.text }]}>
+              Enter Passcode
+            </Text>
 
             <View style={styles.pinDots}>
               {[0, 1, 2, 3].map((idx) => (
@@ -860,12 +991,17 @@ const DataPage = () => {
                   style={[
                     styles.pinDot,
                     { backgroundColor: colors.border },
-                    pin.length > idx && [styles.pinDotActive, { backgroundColor: colors.primary }],
+                    pin.length > idx && [
+                      styles.pinDotActive,
+                      { backgroundColor: colors.primary },
+                    ],
                   ]}
                 />
               ))}
             </View>
-            {processing && <ActivityIndicator size="large" color={colors.primary} />}
+            {processing && (
+              <ActivityIndicator size="large" color={colors.primary} />
+            )}
           </View>
 
           <View style={styles.pinBottom}>
@@ -873,74 +1009,96 @@ const DataPage = () => {
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                 <TouchableOpacity
                   key={`key-${num}`}
-                  style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                  style={[
+                    styles.keyButton,
+                    { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                  ]}
                   onPress={() => {
                     setPin((prev) =>
                       prev.length < 4 ? `${prev}${num}` : prev,
                     );
                   }}
                 >
-                  <Text style={[styles.keyText, { color: colors.text }]}>{num}</Text>
+                  <Text style={[styles.keyText, { color: colors.text }]}>
+                    {num}
+                  </Text>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
                 onPress={() => setPin((prev) => prev.slice(0, -1))}
               >
-                <Ionicons name="backspace-outline" size={20} color={colors.primary} />
+                <Ionicons
+                  name="backspace-outline"
+                  size={20}
+                  color={colors.primary}
+                />
               </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
-              onPress={() => {
-                setPin((prev) => (prev.length < 4 ? `${prev}0` : prev));
-              }}
-            >
-              <Text style={[styles.keyText, { color: colors.text }]}>0</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
-              onPress={() => {
-                if (pin.length < 4) {
-                  setAlertTitle("Incomplete PIN");
-                  setAlertMessage("Please enter your 4-digit PIN.");
-                  setAlertVisible(true);
-                  return;
-                }
-                handleDataPurchase();
-              }}
-            >
-              <Ionicons
-                name="return-up-forward-outline"
-                size={20}
-                color={colors.primary}
-              />
-            </TouchableOpacity>
-        </View>
+              <TouchableOpacity
+                style={[
+                  styles.keyButton,
+                  { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                ]}
+                onPress={() => {
+                  setPin((prev) => (prev.length < 4 ? `${prev}0` : prev));
+                }}
+              >
+                <Text style={[styles.keyText, { color: colors.text }]}>0</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
+                onPress={() => {
+                  if (pin.length < 4) {
+                    setAlertTitle("Incomplete PIN");
+                    setAlertMessage("Please enter your 4-digit PIN.");
+                    setAlertVisible(true);
+                    return;
+                  }
+                  handleDataPurchase();
+                }}
+              >
+                <Ionicons
+                  name="return-up-forward-outline"
+                  size={20}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            </View>
 
-        {fingerEnabled && (
-          <TouchableOpacity
-            style={styles.fingerprintWrap}
-            onPress={handleFingerprintPay}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.fingerprintText, { color: colors.textMuted }]}>
-              Pay with finger print
-            </Text>
-            <Image
-              source={require("@/assets/images/fingerprint.png")}
-              style={styles.fingerprintIcon}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  </Modal>
-  <AlertModal
-    isVisible={alertVisible}
-    title={alertTitle}
-    message={alertMessage}
-    onClose={() => setAlertVisible(false)}
-  />
+            {fingerEnabled && (
+              <TouchableOpacity
+                style={styles.fingerprintWrap}
+                onPress={handleFingerprintPay}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[styles.fingerprintText, { color: colors.textMuted }]}
+                >
+                  Pay with finger print
+                </Text>
+                <Image
+                  source={require("@/assets/images/fingerprint.png")}
+                  style={styles.fingerprintIcon}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </Modal>
+      <AlertModal
+        isVisible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </SafeAreaView>
   );
 };

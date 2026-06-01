@@ -22,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SignatureScreen from "react-native-signature-canvas";
 import { useTheme } from "../../context/ThemeContext";
 import AlertModal from "../components/AlertModal";
+import { endPoints } from "@/constants/urls";
 
 const BusinessNameRegistration = () => {
   const { isDark, colors } = useTheme();
@@ -151,7 +152,7 @@ const BusinessNameRegistration = () => {
         type: "image/png",
       });
 
-      const response = await fetch("https://api.rahausub.com.ng/cacRegistration.php", {
+      const response = await fetch(endPoints.registerCAC, {
         method: "POST",
         body: formData,
         headers: {

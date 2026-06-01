@@ -1,25 +1,33 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import { Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import {
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 
+import { endPoints } from "@/constants/urls";
 import { useTheme } from "../../context/ThemeContext";
+import { APPNAME } from "@/constants/variables";
 
 const SuccessIcon = require("@/assets/images/success.png");
 
 const CacSuccess = () => {
   const { isDark, colors } = useTheme();
-  const { sname, businessName, amount } =
-    useLocalSearchParams<{
-      sname?: string;
-      businessName?: string;
-      amount?: string;
-    }>();
+  const { sname, businessName, amount } = useLocalSearchParams<{
+    sname?: string;
+    businessName?: string;
+    amount?: string;
+  }>();
 
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -51,16 +59,13 @@ const CacSuccess = () => {
       const userToken = await AsyncStorage.getItem("userToken");
       if (!userToken) return;
 
-      const response = await fetch(
-        "https://api.rahausub.com.ng/getBalance.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: userToken }),
+      const response = await fetch(endPoints.getBalance, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ token: userToken }),
+      });
 
       const data = await response.json();
       if (data.success) {
@@ -81,41 +86,81 @@ const CacSuccess = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.topSection}>
           <Image source={SuccessIcon} style={styles.successImage} />
-          <Text style={[styles.successTitle, { color: colors.primary }]}>Registration Submitted</Text>
+          <Text style={[styles.successTitle, { color: colors.primary }]}>
+            Registration Submitted
+          </Text>
           <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>
-            Thank you For Using Rahau Sub
+            Thank you For Using {APPNAME}
           </Text>
         </View>
 
         <View style={styles.bottomSection}>
-          <View style={[styles.summaryCard, { backgroundColor: isDark ? colors.surface : "#ffffff", borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: isDark ? colors.surface : "#ffffff",
+                borderColor: colors.border,
+              },
+            ]}
+          >
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Service:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>CAC Business Registration</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Service:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                CAC Business Registration
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Proprietor:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{sname || "-"}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Proprietor:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                {sname || "-"}
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Business Name:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{businessName || "-"}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Business Name:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                {businessName || "-"}
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Amount Paid:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>₦{Number(amount).toLocaleString()}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Amount Paid:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                ₦{Number(amount).toLocaleString()}
+              </Text>
             </View>
           </View>
 
-          <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.surface : "#f8fbff", borderColor: colors.border }]}>
-            <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
+          <View
+            style={[
+              styles.balanceCard,
+              {
+                backgroundColor: isDark ? colors.surface : "#f8fbff",
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
+              Wallet Balance
+            </Text>
             <View style={styles.balanceRow}>
-              <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>Balance after</Text>
+              <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>
+                Balance after
+              </Text>
               <Text style={[styles.balanceValue, { color: colors.primary }]}>
                 ₦{balance.toLocaleString()}
               </Text>
@@ -123,7 +168,7 @@ const CacSuccess = () => {
           </View>
 
           <View style={styles.actions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.fillButton}
               activeOpacity={0.85}
               onPress={() => router.replace("/Dashboard")}

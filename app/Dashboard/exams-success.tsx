@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTheme } from "../../context/ThemeContext";
 import { StatusBar } from "react-native";
+import { APPNAME } from "@/constants/variables";
 
 const SuccessIcon = require("@/assets/images/success.png");
 
@@ -24,7 +25,7 @@ const ExamsSuccess = () => {
         <View style={styles.topSection}>
           <Image source={SuccessIcon} style={styles.successImage} />
           <Text style={[styles.successTitle, { color: colors.primary }]}>Transaction Successful</Text>
-          <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>Thank you For Using Rahau Sub</Text>
+          <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>Thank you For Using {APPNAME}</Text>
         </View>
 
         <View style={styles.bottomSection}>

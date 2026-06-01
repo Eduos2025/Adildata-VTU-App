@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -22,19 +21,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import TransactionDetailModal from "../components/TransactionDetailModal";
 
-const CardBg = require("@/assets/images/cardbg.png");
-const PlaceholderIcon = require("@/assets/images/icon.png");
-const rahausub = require("@/assets/images/rahau sub.png");
-const avater = require("@/assets/images/avater.png");
-const airtime = require("@/assets/images/airtime.png");
-
-const AirtimeIcon = require("@/assets/images/airtime.png");
-const DataIcon = require("@/assets/images/data.png");
-const ElectricityIcon = require("@/assets/images/elec.png");
-const ExamsIcon = require("@/assets/images/exam.png");
-const TvIcon = require("@/assets/images/tv.png");
-const CacIcon = require("@/assets/images/cac.png");
-
 const services = [
   { id: "airtime", label: "Airtime", icon: AirtimeIcon },
   { id: "data", label: "Data", icon: DataIcon },
@@ -43,13 +29,6 @@ const services = [
   { id: "tv", label: "TV Subscription", icon: TvIcon },
   { id: "cac", label: "CAC Registration", icon: CacIcon },
 ];
-
-type User = {
-  id: string;
-  email: string;
-  name: string;
-  haspin: boolean;
-};
 
 // 🔹 Define the transaction type
 type Transaction = {
@@ -63,8 +42,25 @@ type Transaction = {
 
 import * as Haptics from "expo-haptics";
 
+import {
+  AirtimeIcon,
+  AppLogo,
+  avater,
+  CacIcon,
+  CardBg,
+  DataIcon,
+  ElectricityIcon,
+  ExamsIcon,
+  TvIcon,
+} from "@/constants/images";
+import { User } from "@/constants/types";
+import { endPoints } from "@/constants/urls";
+import { APPNAME } from "@/constants/variables";
 import * as Notifications from "expo-notifications";
 import { useTheme } from "../../context/ThemeContext";
+import IdentityVerificationModal from "../components/kyc-modal";
+import useNotificationStore from "../states/notifications";
+import useUserStore from "../states/user";
 
 const Dashboard = () => {
   const { isDark, colors } = useTheme();
@@ -94,7 +90,7 @@ const Dashboard = () => {
 
   const not = async () => {
     await sendNotification(
-      "Welcome back to Rahau Sub",
+      `Welcome back to ${APPNAME}`,
       `Get 1 GB as low as ₦250`,
     );
   };
@@ -106,16 +102,9 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("");
-  const [user, setUser] = useState<User | null>(null);
-
-  const triggerVibration = async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  };
-
-  useEffect(() => {
-    triggerVibration();
-  }, []);
+  // const [email, setEmail] = useState("");
+  // const [user, setUser] = useState<User | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const [accountNumber, setAccountNumber] = useState("");
   const [bankName, setBankName] = useState("");
@@ -125,19 +114,49 @@ const Dashboard = () => {
   const [selectedTrx, setSelectedTrx] = useState<Transaction | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const triggerVibration = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  useEffect(() => {
+    triggerVibration();
+  }, []);
+
+  const setUser = useUserStore((state) => state.setUser);
+  const user = useUserStore((state) => state.user);
+
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
+
+  const fetchNotifications = useNotificationStore(
+    (state) => state.fetchNotifications,
+  );
+
+  // const fetchUnreadCount = useNotificationStore(
+  //   (state) => state.fetchUnreadCount,
+  // );
+
+  useEffect(() => {
+    const loadNotifications = async () => {
+      await Promise.all([fetchNotifications()]);
+    };
+
+    loadNotifications();
+
+    const interval = setInterval(loadNotifications, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchTransactions = async () => {
     const userToken = await AsyncStorage.getItem("userToken");
     if (!userToken) return;
 
     try {
-      const response = await fetch(
-        "https://api.rahausub.com.ng/getTransactions.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: userToken }),
-        },
-      );
+      const response = await fetch(endPoints.getTransactions, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: userToken }),
+      });
 
       const data = await response.json(); // <-- `data` is defined here
 
@@ -156,8 +175,8 @@ const Dashboard = () => {
           amount: trx.amount,
           negative: trx.negative,
           status: trx.status, // include status from API
-          phone: trx.phone,   // capture phone
-          date: trx.date,     // capture date
+          phone: trx.phone, // capture phone
+          date: trx.date, // capture date
           fullReceipt: trx.fullReceipt, // optional full receipt
         }));
 
@@ -170,12 +189,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTransactions();
+    fetchNotifications();
   }, []);
 
   useEffect(() => {
-    getBalance();
+    // getBalance();
     getAccountDetails();
-  }, []);
+  }, [isModalVisible]);
 
   //Get Account Details Function
   const getAccountDetails = async () => {
@@ -184,16 +204,13 @@ const Dashboard = () => {
 
       if (!userToken) return;
 
-      const response = await fetch(
-        "https://api.rahausub.com.ng/getAccountDetails.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: userToken }),
+      const response = await fetch(endPoints.getAccountDetails, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ token: userToken }),
+      });
 
       const data = await response.json();
 
@@ -209,65 +226,80 @@ const Dashboard = () => {
     }
   };
 
-  // 🔥 Fetch Balance Function
-  const getBalance = async (isRefresh = false) => {
-    try {
-      if (!isRefresh) setLoading(true);
-
-      const userToken = await AsyncStorage.getItem("userToken");
-
-      if (!userToken) {
-        console.log("No token found");
-        return;
-      }
-
-      const response = await fetch(
-        "https://api.rahausub.com.ng/getBalance.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: userToken }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        setBalance(Number(data.balance) || 0);
-        setEmail(data.email || "");
-      } else {
-        console.log("API Error:", data.message);
-      }
-    } catch (error) {
-      console.error("Fetch balance error:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  // 🚀 Load balance on screen open
-  useEffect(() => {
-    getBalance();
-  }, []);
-
   // 🔄 Pull-to-refresh
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    getBalance(true);
+    // getBalance(true);
     fetchTransactions();
   }, []);
 
   // 👤 Load user from storage
   useEffect(() => {
     const loadUser = async () => {
+      let myUser: User = {
+        id: "",
+        email: "",
+        name: "",
+        haspin: false,
+        accName: "",
+        accNo: "",
+        adminRole: "",
+        bankName: "",
+        phone: "",
+        referralCode: "",
+        referralLink: "",
+        walletBalance: 0,
+        state: "",
+      };
       try {
         const userData = await AsyncStorage.getItem("user");
         if (userData) {
-          setUser(JSON.parse(userData));
+          const { id, email, name, phone, haspin } = JSON.parse(userData);
+
+          myUser = {
+            id: id,
+            email: email,
+            name: name,
+            haspin: haspin,
+            accName: "",
+            accNo: "",
+            adminRole: "",
+            bankName: "",
+            phone: phone,
+            referralCode: "",
+            referralLink: "",
+            walletBalance: 0,
+            state: "",
+          };
+
+          setUser(myUser);
         }
+
+        const userToken = await AsyncStorage.getItem("userToken");
+        if (!userToken) return;
+
+        const response = await fetch(endPoints.profile, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: userToken }),
+        });
+
+        const data = await response.json();
+
+        const updatedUser: User = {
+          ...myUser,
+          accName: data.data.acc_name,
+          accNo: data.data.acc_no,
+          bankName: data.data.bank_name,
+          walletBalance: data.data.wallet_balance,
+          referralLink: data.data.referral_link,
+          referralCode: data.data.referral_code,
+        };
+
+        setUser(updatedUser);
+        console.log(user);
       } catch (e) {
         console.log("User parse error:", e);
       }
@@ -286,12 +318,17 @@ const Dashboard = () => {
   useFocusEffect(
     useCallback(() => {
       fetchTransactions();
-      getBalance(true);
+      // getBalance(true);
     }, []),
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -25, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -25, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       <KeyboardAvoidingView
@@ -306,107 +343,243 @@ const Dashboard = () => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.headerWrap}
-          >
-            <View style={styles.headerCard}>
+          <View style={styles.headerWrap}>
+            <TouchableOpacity
+              style={{
+                alignSelf: "flex-end",
+
+                margin: 8,
+                position: "relative",
+              }}
+              onPress={() => router.push("/Dashboard/notifications")}
+            >
+              <Ionicons
+                name="notifications"
+                style={{
+                  color: colors.text,
+                  fontSize: 32,
+                }}
+              />
+              <View
+                style={{
+                  backgroundColor: colors.error,
+                  borderRadius: "50%",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: 16,
+                  height: 16,
+                  position: "absolute",
+                  right: 0,
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.onPrimary,
+                    fontSize: 10,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {unreadCount}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <View
+              style={[styles.headerCard, { backgroundColor: colors.primary }]}
+            >
               <View style={styles.avatar}>
                 <Image source={avater} style={styles.avatarImage} />
               </View>
               <View style={styles.headerTextWrap}>
-                <Text style={[styles.userName, { color: "#ffffff" }]}>{user?.name}</Text>
-                <Text style={[styles.userType, { color: "#e6eeff" }]}>Customer Account</Text>
+                <Text style={[styles.userName, { color: "#ffffff" }]}>
+                  {user?.name}
+                </Text>
+                <Text style={[styles.userType, { color: "#e6eeff" }]}>
+                  Customer Account
+                </Text>
               </View>
               <View style={styles.balanceWrap}>
-                <Text style={[styles.balanceLabel, { color: "#e6eeff" }]}>Balance</Text>
-                <Text style={[styles.balanceValue, { color: "#ffffff" }]}>₦{balance}</Text>
+                <Text style={[styles.balanceLabel, { color: "#e6eeff" }]}>
+                  Balance
+                </Text>
+                <Text style={[styles.balanceValue, { color: "#ffffff" }]}>
+                  ₦{balance}
+                </Text>
               </View>
             </View>
-          </LinearGradient>
+          </View>
+          {/* </LinearGradient> */}
 
           <ImageBackground
             source={CardBg}
             style={styles.bankCard}
             imageStyle={styles.bankCardImage}
           >
-            <View style={[styles.bankCardOverlay, { backgroundColor: isDark ? "rgba(15, 23, 42, 0.82)" : "rgba(255, 255, 255, 0.85)" }]}>
+            <View
+              style={[
+                styles.bankCardOverlay,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(15, 23, 42, 0.82)"
+                    : "rgba(255, 255, 255, 0.85)",
+                },
+              ]}
+            >
               <View style={styles.bankRowTop}>
                 <View>
-                  <Text style={[styles.bankTitle, { color: colors.text }]}>Bank Details</Text>
-                  <Text style={[styles.bankSub, { color: colors.textMuted }]}>
-                    To fund your wallet automatically
+                  <Text style={[styles.bankTitle, { color: colors.text }]}>
+                    Bank Details
                   </Text>
-                  <Text style={[styles.bankSub, { color: colors.textMuted }]}>
-                    Kindly make a bank transfer to this account
-                  </Text>
+                  {!accountName && !accountNumber ? (
+                    <>
+                      <Text
+                        style={[styles.bankSub, { color: colors.textMuted }]}
+                      >
+                        Click on fund wallet to generate
+                      </Text>
+                      <Text
+                        style={[styles.bankSub, { color: colors.textMuted }]}
+                      >
+                        your personal account number
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text
+                        style={[styles.bankSub, { color: colors.textMuted }]}
+                      >
+                        To fund your wallet automatically
+                      </Text>
+                      <Text
+                        style={[styles.bankSub, { color: colors.textMuted }]}
+                      >
+                        Kindly make a bank transfer to this account
+                      </Text>
+                    </>
+                  )}
                 </View>
-                <View style={[styles.fundButton, { backgroundColor: colors.accent }]}>
-                  <Text style={[styles.fundButtonText, { color: isDark ? "#000000" : "#ffffff" }]}>Fund Wallet</Text>
-                </View>
-              </View>
-
-              <View style={styles.bankInfoGroup}>
-                <Text style={[styles.bankLabel, { color: colors.textMuted }]}>Account Number</Text>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Text style={[styles.bankValue, { color: colors.text }]}>
-                    {accountNumber || (
-                      <ActivityIndicator size="small" color={colors.accent} />
-                    )}
-                  </Text>
-                  <TouchableOpacity
+                <TouchableOpacity
+                  style={[
+                    styles.fundButton,
+                    {
+                      backgroundColor: colors.accent,
+                      elevation: 1,
+                    },
+                  ]}
+                  onPress={() => setModalOpen(true)}
+                >
+                  <Text
                     style={[
-                      styles.fundButton,
-                      {
-                        backgroundColor: colors.accent,
-                        marginLeft: 8,
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                      },
+                      styles.fundButtonText,
+                      { color: isDark ? "#000000" : "#ffffff" },
                     ]}
-                    onPress={() => {
-                      // Copy to clipboard
-                      Clipboard.setString(accountNumber || "");
-                    }}
                   >
-                    <Text style={[styles.fundButtonText, { fontSize: 12, color: isDark ? "#000000" : "#ffffff" }]}>
-                      copy <Ionicons name="copy-outline" size={12} color={isDark ? "#000000" : "#ffffff"} />
+                    Fund Wallet
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {accountName && accountNumber && (
+                <>
+                  <View style={styles.bankInfoGroup}>
+                    <Text
+                      style={[styles.bankLabel, { color: colors.textMuted }]}
+                    >
+                      Account Number
                     </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Text style={[styles.bankValue, { color: colors.text }]}>
+                        {accountNumber || (
+                          <ActivityIndicator
+                            size="small"
+                            color={colors.accent}
+                          />
+                        )}
+                      </Text>
+                      <TouchableOpacity
+                        style={[
+                          styles.fundButton,
+                          {
+                            backgroundColor: colors.accent,
+                            marginLeft: 8,
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                          },
+                        ]}
+                        onPress={() => {
+                          // Copy to clipboard
+                          Clipboard.setString(accountNumber || "");
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.fundButtonText,
+                            {
+                              fontSize: 12,
+                              color: isDark ? "#000000" : "#ffffff",
+                            },
+                          ]}
+                        >
+                          copy{" "}
+                          <Ionicons
+                            name="copy-outline"
+                            size={12}
+                            color={isDark ? "#000000" : "#ffffff"}
+                          />
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
 
-              <View style={styles.bankInfoGroup}>
-                <Text style={[styles.bankLabel, { color: colors.textMuted }]}>Bank name</Text>
-                <Text style={[styles.bankValue, { color: colors.text }]}>
-                  {bankName || (
-                    <ActivityIndicator size="small" color={colors.accent} />
-                  )}
-                </Text>
-              </View>
+                  <View style={styles.bankInfoGroup}>
+                    <Text
+                      style={[styles.bankLabel, { color: colors.textMuted }]}
+                    >
+                      Bank name
+                    </Text>
+                    <Text style={[styles.bankValue, { color: colors.text }]}>
+                      {bankName || (
+                        <ActivityIndicator size="small" color={colors.accent} />
+                      )}
+                    </Text>
+                  </View>
 
-              <View style={styles.bankFooter}>
-                <Text style={[styles.bankOwner, { color: colors.text }]}>
-                  {accountName || (
-                    <ActivityIndicator size="small" color={colors.accent} />
-                  )}
-                </Text>
-                <View style={[styles.bankBadge, { backgroundColor: isDark ? colors.surface : "#ffffff" }]}>
-                  <Image source={rahausub} style={styles.bankBadgeIcon} />
-                </View>
-              </View>
+                  <View style={styles.bankFooter}>
+                    <Text style={[styles.bankOwner, { color: colors.text }]}>
+                      {accountName || (
+                        <ActivityIndicator size="small" color={colors.accent} />
+                      )}
+                    </Text>
+                    <View
+                      style={[
+                        styles.bankBadge,
+                        {
+                          backgroundColor: isDark ? colors.surface : "#ffffff",
+                        },
+                      ]}
+                    >
+                      <Image source={AppLogo} style={styles.bankBadgeIcon} />
+                    </View>
+                  </View>
+                </>
+              )}
             </View>
           </ImageBackground>
-
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Our Services</Text>
+          {/* 
+          <ReferralSection
+            referralCode={referralCode}
+            referralLink={referralLink}
+          /> */}
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Our Services
+          </Text>
           <View style={styles.servicesGrid}>
             {services.map((service) => (
               <TouchableOpacity
                 activeOpacity={0.75}
                 key={service.id}
-                style={styles.serviceCard}
+                style={[styles.serviceCard]}
                 onPress={() => {
                   if (service.id === "airtime") {
                     router.push("/Dashboard/airtime");
@@ -428,22 +601,42 @@ const Dashboard = () => {
                   }
                 }}
               >
-                <View style={[styles.serviceIconWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View
+                  style={[
+                    styles.serviceIconWrap,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
                   <Image source={service.icon} style={styles.serviceIcon} />
                 </View>
-                <Text style={[styles.serviceLabel, { color: colors.text }]}>{service.label}</Text>
+                <Text style={[styles.serviceLabel, { color: colors.text }]}>
+                  {service.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Transactions</Text>
-          <View style={[styles.transactionsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Recent Transactions
+          </Text>
+          <View
+            style={[
+              styles.transactionsCard,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             {transactions.map((item, index) => (
               <TouchableOpacity
                 key={item.id}
                 style={[
                   styles.transactionRow,
-                  index !== 0 && [styles.transactionRowBorder, { borderTopColor: colors.border }],
+                  index !== 0 && [
+                    styles.transactionRowBorder,
+                    { borderTopColor: colors.border },
+                  ],
                 ]}
                 onPress={() => {
                   setSelectedTrx(item);
@@ -451,8 +644,17 @@ const Dashboard = () => {
                 }}
               >
                 <View>
-                  <Text style={[styles.transactionTitle, { color: colors.text }]}>{item.title}</Text>
-                  <Text style={[styles.transactionSubtitle, { color: colors.textMuted }]}>
+                  <Text
+                    style={[styles.transactionTitle, { color: colors.text }]}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.transactionSubtitle,
+                      { color: colors.textMuted },
+                    ]}
+                  >
                     {item.subtitle}
                   </Text>
                 </View>
@@ -469,6 +671,11 @@ const Dashboard = () => {
               </TouchableOpacity>
             ))}
           </View>
+          <IdentityVerificationModal
+            onClose={() => setModalOpen(false)}
+            visible={modalOpen}
+            user={user}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -551,6 +758,7 @@ const styles = StyleSheet.create({
     marginTop: -108,
     borderRadius: 26,
     overflow: "hidden",
+    elevation: 2,
   },
   bankCardImage: {
     borderRadius: 26,
@@ -613,20 +821,24 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   bankBadge: {
+    height: 40,
+    width: 80,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#ffffff",
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderRadius: 10,
     shadowColor: "#2d6fb7",
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
   },
   bankBadgeIcon: {
-    width: 90,
-    height: 20,
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    overflow: "hidden",
+    borderRadius: 10,
+    elevation: 3,
     // tintColor: "#2d6fb7",
   },
   bankBadgeText: {

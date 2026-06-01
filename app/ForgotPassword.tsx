@@ -1,24 +1,23 @@
+import { endPoints } from "@/constants/urls";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../context/ThemeContext";
 import AlertModal from "./components/AlertModal";
 import GradientButton from "./components/buttons";
-import { useTheme } from "../context/ThemeContext";
+import { AppLogo } from "@/constants/images";
 
-const AppLogo = require("@/assets/images/rahau sub.png");
 
 const ForgotPassword = () => {
   const { isDark, colors } = useTheme();
@@ -39,7 +38,7 @@ const ForgotPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("https://api.rahausub.com.ng/resetPassword.php", {
+      const response = await fetch(endPoints.resetPassword, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,18 +50,25 @@ const ForgotPassword = () => {
 
       if (json.success) {
         setAlertTitle("Email Sent");
-        setAlertMessage(json.message || "Password reset instructions have been sent to your email.");
+        setAlertMessage(
+          json.message ||
+            "Password reset instructions have been sent to your email.",
+        );
         setAlertVisible(true);
         // We stay on this page to let them read the message, or they can go back
       } else {
         setAlertTitle("Request Failed");
-        setAlertMessage(json.message || "We couldn't process your request. Please try again.");
+        setAlertMessage(
+          json.message || "We couldn't process your request. Please try again.",
+        );
         setAlertVisible(true);
       }
     } catch (err) {
       console.log(err);
       setAlertTitle("Connection Error");
-      setAlertMessage("Something went wrong. Please check your internet connection.");
+      setAlertMessage(
+        "Something went wrong. Please check your internet connection.",
+      );
       setAlertVisible(true);
     } finally {
       setIsLoading(false);
@@ -75,12 +81,25 @@ const ForgotPassword = () => {
         style={{ flex: 1, padding: 20 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.back()}
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 20,
+          }}
         >
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
-          <Text style={{ marginLeft: 8, color: colors.primary, fontSize: 16, fontWeight: '600' }}>Back</Text>
+          <Text
+            style={{
+              marginLeft: 8,
+              color: colors.primary,
+              fontSize: 16,
+              fontWeight: "600",
+            }}
+          >
+            Back
+          </Text>
         </TouchableOpacity>
 
         <ScrollView
@@ -104,8 +123,16 @@ const ForgotPassword = () => {
             >
               Reset Password
             </Text>
-            <Text style={{ fontSize: 14, color: colors.textMuted, textAlign: "center", marginTop: 8 }}>
-              Enter your email address and we'll send you instructions to reset your password.
+            <Text
+              style={{
+                fontSize: 14,
+                color: colors.textMuted,
+                textAlign: "center",
+                marginTop: 8,
+              }}
+            >
+              Enter your email address and we'll send you instructions to reset
+              your password.
             </Text>
           </View>
 

@@ -1,3 +1,4 @@
+import { endPoints } from "@/constants/urls";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,19 +22,64 @@ import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import AlertModal from "../components/AlertModal";
+import Header from "../components/header";
 
 const distributors = [
-  { id: "jos-electric", label: "Jos Electric (JED)", logo: require("@/assets/images/jed.png") },
-  { id: "ikeja-electric", label: "Ikeja Electric (IKEDC)", logo: require("@/assets/images/ikeja.png") },
-  { id: "kano-electric", label: "Kano Electric (KEDCO)", logo: require("@/assets/images/kedco.png") },
-  { id: "abuja-electric", label: "Abuja Electric (AEDC)", logo: require("@/assets/images/abuja.png") },
-  { id: "eko-electric", label: "Eko Electric (EKEDC)", logo: require("@/assets/images/elec.png") },
-  { id: "portharcourt-electric", label: "Port Harcourt (PHED)", logo: require("@/assets/images/elec.png") },
-  { id: "ibadan-electric", label: "Ibadan Electric (IBEDC)", logo: require("@/assets/images/elec.png") },
-  { id: "kaduna-electric", label: "Kaduna Electric (KAEDCO)", logo: require("@/assets/images/elec.png") },
-  { id: "enugu-electric", label: "Enugu Electric (EEDC)", logo: require("@/assets/images/elec.png") },
-  { id: "benin-electric", label: "Benin Electric (BEDC)", logo: require("@/assets/images/elec.png") },
-  { id: "aba-electric", label: "Aba Electric (ABA)", logo: require("@/assets/images/elec.png") },
+  {
+    id: "jos-electric",
+    label: "Jos Electric (JED)",
+    logo: require("@/assets/images/jed.png"),
+  },
+  {
+    id: "ikeja-electric",
+    label: "Ikeja Electric (IKEDC)",
+    logo: require("@/assets/images/ikeja.png"),
+  },
+  {
+    id: "kano-electric",
+    label: "Kano Electric (KEDCO)",
+    logo: require("@/assets/images/kedco.png"),
+  },
+  {
+    id: "abuja-electric",
+    label: "Abuja Electric (AEDC)",
+    logo: require("@/assets/images/abuja.png"),
+  },
+  {
+    id: "eko-electric",
+    label: "Eko Electric (EKEDC)",
+    logo: require("@/assets/images/elec.png"),
+  },
+  {
+    id: "portharcourt-electric",
+    label: "Port Harcourt (PHED)",
+    logo: require("@/assets/images/elec.png"),
+  },
+  {
+    id: "ibadan-electric",
+    label: "Ibadan Electric (IBEDC)",
+    logo: require("@/assets/images/elec.png"),
+  },
+  {
+    id: "kaduna-electric",
+    label: "Kaduna Electric (KAEDCO)",
+    logo: require("@/assets/images/elec.png"),
+  },
+  {
+    id: "enugu-electric",
+    label: "Enugu Electric (EEDC)",
+    logo: require("@/assets/images/elec.png"),
+  },
+  {
+    id: "benin-electric",
+    label: "Benin Electric (BEDC)",
+    logo: require("@/assets/images/elec.png"),
+  },
+  {
+    id: "aba-electric",
+    label: "Aba Electric (ABA)",
+    logo: require("@/assets/images/elec.png"),
+  },
 ];
 
 const meterTypes = ["Prepaid", "Postpaid"];
@@ -45,7 +91,9 @@ const Electricity = () => {
     label: string;
     logo: number;
   } | null>(null);
-  const [selectedMeterType, setSelectedMeterType] = useState<string | null>(null);
+  const [selectedMeterType, setSelectedMeterType] = useState<string | null>(
+    null,
+  );
   const [distributorModal, setDistributorModal] = useState(false);
   const [meterModal, setMeterModal] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -104,7 +152,7 @@ const Electricity = () => {
       const userToken = await AsyncStorage.getItem("userToken");
       if (!userToken) return;
 
-      const response = await fetch("https://api.rahausub.com.ng/getBalance.php", {
+      const response = await fetch(endPoints.getBalance, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: userToken }),
@@ -121,7 +169,11 @@ const Electricity = () => {
     }
   };
 
-  const validateMeter = async (meter: string, serviceID: string, type: string) => {
+  const validateMeter = async (
+    meter: string,
+    serviceID: string,
+    type: string,
+  ) => {
     if (!meter || !serviceID || !type) return;
 
     try {
@@ -129,13 +181,13 @@ const Electricity = () => {
       setErrorMessage("");
       setErrorVisible(false);
 
-      const response = await fetch("https://api.rahausub.com.ng/validateMeter.php", {
+      const response = await fetch(endPoints.validateMeter, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           meter,
           serviceID,
-          type: type.toLowerCase()
+          type: type.toLowerCase(),
         }),
       });
 
@@ -158,14 +210,11 @@ const Electricity = () => {
         setIsVerified(false);
 
         const errorMsg =
-          data.content?.error ||
-          data.message ||
-          "Invalid meter number";
+          data.content?.error || data.message || "Invalid meter number";
 
         setErrorMessage(errorMsg);
         setErrorVisible(true);
       }
-
     } catch (err) {
       console.error("Verification error:", err);
       setCustomerName("");
@@ -195,7 +244,7 @@ const Electricity = () => {
       fetchBalance();
       loadFinger();
       return undefined;
-    }, [])
+    }, []),
   );
 
   const loadFinger = async () => {
@@ -236,7 +285,7 @@ const Electricity = () => {
         return;
       }
 
-      const response = await fetch("https://api.rahausub.com.ng/purchaseElectricity.php", {
+      const response = await fetch(endPoints.purchaseElectricity, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -300,7 +349,12 @@ const Electricity = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -311,23 +365,13 @@ const Electricity = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.headerLink}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Electricity Bill</Text>
-            <TouchableOpacity>
-              <Text style={styles.headerLink}>Help</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+          {/* HEADER */}
+          <Header title="Electricity Bill" />
 
           <View style={styles.content}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Choose Distributor</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Choose Distributor
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -349,19 +393,37 @@ const Electricity = () => {
                     activeOpacity={0.8}
                     style={[
                       styles.networkCard,
-                      { backgroundColor: colors.surface, borderColor: colors.border },
-                      isActive && [styles.networkCardActive, { borderColor: colors.primary }],
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                      },
+                      isActive && [
+                        styles.networkCardActive,
+                        { borderColor: colors.primary },
+                      ],
                     ]}
                   >
-                    <Image source={item.logo} style={styles.networkLogo} resizeMode="contain" />
+                    <Image
+                      source={item.logo}
+                      style={styles.networkLogo}
+                      resizeMode="contain"
+                    />
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Or Select Here</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Or Select Here
+            </Text>
             <TouchableOpacity
-              style={[styles.selectInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}
+              style={[
+                styles.selectInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               onPress={() => setDistributorModal(true)}
               activeOpacity={0.8}
             >
@@ -369,7 +431,10 @@ const Electricity = () => {
                 style={[
                   styles.selectText,
                   { color: colors.text },
-                  !selectedDistributor && [styles.selectPlaceholder, { color: colors.textMuted }],
+                  !selectedDistributor && [
+                    styles.selectPlaceholder,
+                    { color: colors.textMuted },
+                  ],
                 ]}
               >
                 {selectedDistributor?.label ?? "Choose a distributor"}
@@ -377,9 +442,17 @@ const Electricity = () => {
               <Ionicons name="chevron-down" size={18} color={colors.accent} />
             </TouchableOpacity>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Meter Type</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Meter Type
+            </Text>
             <TouchableOpacity
-              style={[styles.selectInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder }]}
+              style={[
+                styles.selectInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               onPress={() => setMeterModal(true)}
               activeOpacity={0.8}
             >
@@ -387,7 +460,10 @@ const Electricity = () => {
                 style={[
                   styles.selectText,
                   { color: colors.text },
-                  !selectedMeterType && [styles.selectPlaceholder, { color: colors.textMuted }],
+                  !selectedMeterType && [
+                    styles.selectPlaceholder,
+                    { color: colors.textMuted },
+                  ],
                 ]}
               >
                 {selectedMeterType ?? "Choose meter type"}
@@ -397,8 +473,22 @@ const Electricity = () => {
 
             {selectedDistributor && selectedMeterType && (
               <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Meter Number</Text>
-                <View style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 10 }]}>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Meter Number
+                </Text>
+                <View
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      paddingRight: 10,
+                    },
+                  ]}
+                >
                   <TextInput
                     placeholder="Enter Meter Number"
                     keyboardType="numeric"
@@ -409,12 +499,18 @@ const Electricity = () => {
                       setCustomerName("");
                     }}
                     placeholderTextColor={colors.textMuted}
-                    style={[{ color: colors.text, flex: 1, height: '100%' }]}
+                    style={[{ color: colors.text, flex: 1, height: "100%" }]}
                   />
                   {isVerifying ? (
                     <ActivityIndicator size="small" color={colors.primary} />
                   ) : (
-                    isVerified && <Ionicons name="checkmark-circle" size={20} color="#22c55e" />
+                    isVerified && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color="#22c55e"
+                      />
+                    )
                   )}
                 </View>
 
@@ -425,7 +521,13 @@ const Electricity = () => {
                     </Text>
 
                     {customerAddress ? (
-                      <Text style={{ color: isDark ? "#fff" : "#555", marginTop: 4, marginBottom: 10 }}>
+                      <Text
+                        style={{
+                          color: isDark ? "#fff" : "#555",
+                          marginTop: 4,
+                          marginBottom: 10,
+                        }}
+                      >
                         Address: {customerAddress}
                       </Text>
                     ) : null}
@@ -433,7 +535,15 @@ const Electricity = () => {
                 )}
 
                 {errorVisible && errorMessage && (
-                  <Text style={{ color: '#ef4444', fontSize: 13, fontWeight: '600', marginBottom: 15, marginTop: -10 }}>
+                  <Text
+                    style={{
+                      color: "#ef4444",
+                      fontSize: 13,
+                      fontWeight: "600",
+                      marginBottom: 15,
+                      marginTop: -10,
+                    }}
+                  >
                     ❌ {errorMessage}
                   </Text>
                 )}
@@ -442,24 +552,42 @@ const Electricity = () => {
 
             {isVerified && (
               <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Amount</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Amount
+                </Text>
                 <TextInput
                   placeholder="Min ₦1000"
                   keyboardType="numeric"
                   value={amount}
                   onChangeText={setAmount}
                   placeholderTextColor={colors.textMuted}
-                  style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                      color: colors.text,
+                    },
+                  ]}
                 />
 
-                <Text style={[styles.inputLabel, { color: colors.text }]}>Phone Number</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Phone Number
+                </Text>
                 <TextInput
                   placeholder="Recipient Phone"
                   keyboardType="phone-pad"
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
                   placeholderTextColor={colors.textMuted}
-                  style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.inputBorder,
+                      color: colors.text,
+                    },
+                  ]}
                   maxLength={11}
                 />
 
@@ -477,7 +605,9 @@ const Electricity = () => {
                     }
                     if (phoneNumber.length !== 11) {
                       setAlertTitle("Invalid Phone");
-                      setAlertMessage("Please enter a valid 11-digit phone number.");
+                      setAlertMessage(
+                        "Please enter a valid 11-digit phone number.",
+                      );
                       setAlertVisible(true);
                       return;
                     }
@@ -505,7 +635,9 @@ const Electricity = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Select Distributor</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Select Distributor
+          </Text>
           {distributors.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -520,8 +652,14 @@ const Electricity = () => {
                 setDistributorModal(false);
               }}
             >
-              <Image source={item.logo} style={styles.modalLogo} resizeMode="contain" />
-              <Text style={[styles.modalItemText, { color: colors.text }]}>{item.label}</Text>
+              <Image
+                source={item.logo}
+                style={styles.modalLogo}
+                resizeMode="contain"
+              />
+              <Text style={[styles.modalItemText, { color: colors.text }]}>
+                {item.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -533,7 +671,9 @@ const Electricity = () => {
         style={styles.modal}
       >
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Select Meter Type</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            Select Meter Type
+          </Text>
           {meterTypes.map((type) => (
             <TouchableOpacity
               key={type}
@@ -548,7 +688,9 @@ const Electricity = () => {
                 setMeterModal(false);
               }}
             >
-              <Text style={[styles.modalItemText, { color: colors.text }]}>{type}</Text>
+              <Text style={[styles.modalItemText, { color: colors.text }]}>
+                {type}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -566,8 +708,12 @@ const Electricity = () => {
           >
             <View style={styles.confirmHeader}>
               <View>
-                <Text style={[styles.confirmTitle, { color: colors.text }]}>Confirm Payment</Text>
-                <Text style={[styles.confirmSubtitle, { color: colors.textMuted }]}>
+                <Text style={[styles.confirmTitle, { color: colors.text }]}>
+                  Confirm Payment
+                </Text>
+                <Text
+                  style={[styles.confirmSubtitle, { color: colors.textMuted }]}
+                >
                   Please verify details carefully
                 </Text>
               </View>
@@ -576,48 +722,116 @@ const Electricity = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.confirmBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.confirmBox,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Distributor:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{selectedDistributor?.label}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Distributor:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {selectedDistributor?.label}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Meter Type:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{selectedMeterType}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Meter Type:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {selectedMeterType}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Meter Number:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{meterNumber}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Meter Number:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {meterNumber}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Customer Name:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{customerName}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Customer Name:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {customerName}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Amount:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>₦{Number(amount).toLocaleString()}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Amount:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  ₦{Number(amount).toLocaleString()}
+                </Text>
               </View>
               <View style={styles.confirmRow}>
-                <Text style={[styles.confirmLabel, { color: colors.textMuted }]}>Phone Number:</Text>
-                <Text style={[styles.confirmValue, { color: colors.text }]}>{phoneNumber}</Text>
+                <Text
+                  style={[styles.confirmLabel, { color: colors.textMuted }]}
+                >
+                  Phone Number:
+                </Text>
+                <Text style={[styles.confirmValue, { color: colors.text }]}>
+                  {phoneNumber}
+                </Text>
               </View>
             </View>
 
-            <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.surface : "#f8fbff", borderColor: colors.border }]}>
-              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
+            <View
+              style={[
+                styles.balanceCard,
+                {
+                  backgroundColor: isDark ? colors.surface : "#f8fbff",
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
+                Wallet Balance
+              </Text>
               <View style={styles.balanceRow}>
-                <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>Available Balance</Text>
-                <Text style={[styles.balanceValue, { color: colors.primary }]}>₦{balance.toLocaleString()}</Text>
+                <Text
+                  style={[styles.balanceSmall, { color: colors.textMuted }]}
+                >
+                  Available Balance
+                </Text>
+                <Text style={[styles.balanceValue, { color: colors.primary }]}>
+                  ₦{balance.toLocaleString()}
+                </Text>
               </View>
             </View>
 
             <View style={styles.confirmActions}>
               <TouchableOpacity
-                style={[styles.cancelButton, { backgroundColor: isDark ? colors.surface : "#f1f5f9", borderColor: colors.secondary }]}
+                style={[
+                  styles.cancelButton,
+                  {
+                    backgroundColor: isDark ? colors.surface : "#f1f5f9",
+                    borderColor: colors.secondary,
+                  },
+                ]}
                 onPress={() => setConfirmVisible(false)}
                 activeOpacity={0.85}
               >
-                <Text style={[styles.cancelText, { color: colors.secondary }]}>Cancel</Text>
+                <Text style={[styles.cancelText, { color: colors.secondary }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.payButton}
@@ -646,16 +860,22 @@ const Electricity = () => {
         onBackdropPress={() => setPinVisible(false)}
         style={styles.pinModal}
       >
-        <View style={[styles.pinScreen, { backgroundColor: colors.background }]}>
+        <View
+          style={[styles.pinScreen, { backgroundColor: colors.background }]}
+        >
           <TouchableOpacity
             onPress={() => setPinVisible(false)}
             style={styles.pinBack}
           >
-            <Text style={[styles.pinBackText, { color: colors.primary }]}>Back</Text>
+            <Text style={[styles.pinBackText, { color: colors.primary }]}>
+              Back
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.pinContent}>
-            <Text style={[styles.pinTitle, { color: colors.text }]}>Enter Passcode</Text>
+            <Text style={[styles.pinTitle, { color: colors.text }]}>
+              Enter Passcode
+            </Text>
             <View style={styles.pinDots}>
               {[0, 1, 2, 3].map((idx) => (
                 <View
@@ -663,12 +883,21 @@ const Electricity = () => {
                   style={[
                     styles.pinDot,
                     { backgroundColor: colors.border },
-                    pin.length > idx && [styles.pinDotActive, { backgroundColor: colors.primary }],
+                    pin.length > idx && [
+                      styles.pinDotActive,
+                      { backgroundColor: colors.primary },
+                    ],
                   ]}
                 />
               ))}
             </View>
-            {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />}
+            {loading && (
+              <ActivityIndicator
+                size="large"
+                color={colors.primary}
+                style={{ marginTop: 20 }}
+              />
+            )}
           </View>
 
           <View style={styles.pinBottom}>
@@ -676,22 +905,40 @@ const Electricity = () => {
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                 <TouchableOpacity
                   key={`key-${num}`}
-                  style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                  style={[
+                    styles.keyButton,
+                    { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                  ]}
                   onPress={() => {
-                    setPin((prev) => (prev.length < 4 ? `${prev}${num}` : prev));
+                    setPin((prev) =>
+                      prev.length < 4 ? `${prev}${num}` : prev,
+                    );
                   }}
                 >
-                  <Text style={[styles.keyText, { color: colors.text }]}>{num}</Text>
+                  <Text style={[styles.keyText, { color: colors.text }]}>
+                    {num}
+                  </Text>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
                 onPress={() => setPin((prev) => prev.slice(0, -1))}
               >
-                <Ionicons name="backspace-outline" size={20} color={colors.primary} />
+                <Ionicons
+                  name="backspace-outline"
+                  size={20}
+                  color={colors.primary}
+                />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.keyButton, { backgroundColor: isDark ? colors.surface : "#f8fafc" }]}
+                style={[
+                  styles.keyButton,
+                  { backgroundColor: isDark ? colors.surface : "#f8fafc" },
+                ]}
                 onPress={() => {
                   setPin((prev) => (prev.length < 4 ? `${prev}0` : prev));
                 }}
@@ -699,7 +946,11 @@ const Electricity = () => {
                 <Text style={[styles.keyText, { color: colors.text }]}>0</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.keyButton, styles.keyButtonGhost, { backgroundColor: isDark ? colors.border : "#f6f8ff" }]}
+                style={[
+                  styles.keyButton,
+                  styles.keyButtonGhost,
+                  { backgroundColor: isDark ? colors.border : "#f6f8ff" },
+                ]}
                 onPress={() => {
                   if (pin.length < 4) {
                     setAlertTitle("Incomplete PIN");
@@ -724,7 +975,11 @@ const Electricity = () => {
                 onPress={handleFingerprintPay}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.fingerprintText, { color: colors.textMuted }]}>Pay with biometric</Text>
+                <Text
+                  style={[styles.fingerprintText, { color: colors.textMuted }]}
+                >
+                  Pay with biometric
+                </Text>
                 <Image
                   source={require("@/assets/images/fingerprint.png")}
                   style={styles.fingerprintIcon}

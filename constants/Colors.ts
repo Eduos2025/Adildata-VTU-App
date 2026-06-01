@@ -1,35 +1,40 @@
 /**
- * Semantic color palette for Rahau Sub.
  * Includes both Light and Dark mode variations.
  */
 
 export const Colors = {
   light: {
-    primary: "#15803d", // Brand green
-    secondary: "#16a34a", // Vibrant green
-    accent: "#3a4c40", // Accent green
-    background: "#f6fff8", // Soft green-tinted white
+    primary: "#090935", // Brand green
+    secondary: "#147537", // Vibrant green
+    background: "#F8FAFC",
+    card: "#FFFFFF",
+    accent: "#3B82F6",
+    text: "#0F172A",
+    muted: "#64748B",
     surface: "#ffffff", // Cards/Modals
-    text: "#14532d", // Deep green text
-    textMuted: "#6b7280", // Neutral muted text
-    border: "#d1fae5", // Light green border
+    onPrimary: "#ffffff",
+    textMuted: "#171515", // Neutral muted text
+    border: "#64748B", // Light green border
     inputBorder: "#bbf7d0", // Input borders
     success: "#16a34a",
     error: "#dc2626",
     icon: "#15803d",
     tabActive: "#15803d",
     tabInactive: "#9ca3af",
-    gradient: ["#22c55e", "#22c55e"] as const,
+    gradient: ["#111882", "#111882"] as const,
   },
 
   dark: {
-    primary: "#22c55e", // Bright green for contrast
+    primary: "#111882", // Bright green for contrast
     secondary: "#1e723d",
-    accent: "#86efac",
-    background: "#052e16", // Dark green background
-    surface: "#454c48", // Elevated surface
-    text: "#f0fdf4", // Soft white
-    textMuted: "#bbf7d0",
+    background: "#0F172A",
+    card: "#1E293B",
+    accent: "#3B82F6",
+    text: "#F8FAFC",
+    muted: "#94A3B8",
+    surface: "#8f9a94", // Elevated surface
+    onPrimary: "#ffffff",
+    textMuted: "#dddddd",
     border: "#166534",
     inputBorder: "#15803d",
     success: "#4ade80",
@@ -37,7 +42,7 @@ export const Colors = {
     icon: "#86efac",
     tabActive: "#f0fdf4",
     tabInactive: "#6ee7b7",
-    gradient: ["#22c55e", "#22c55e"] as const,
+    gradient: ["#111882", "#111882"] as const,
   },
 };
 

@@ -2,12 +2,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 
+import { endPoints } from "@/constants/urls";
+import { APPNAME } from "@/constants/variables";
 import { useTheme } from "../../context/ThemeContext";
 
 const SuccessIcon = require("@/assets/images/success.png");
@@ -75,16 +84,13 @@ const AirtimeSuccess = () => {
         return;
       }
 
-      const response = await fetch(
-        "https://api.rahausub.com.ng/getBalance.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: userToken }),
+      const response = await fetch(endPoints.getBalance, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ token: userToken }),
+      });
 
       const data = await response.json();
 
@@ -113,51 +119,89 @@ const AirtimeSuccess = () => {
     }, []),
   );
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.topSection}>
           <Image source={SuccessIcon} style={styles.successImage} />
-          <Text style={[styles.successTitle, { color: colors.primary }]}>Transaction Successful</Text>
+          <Text style={[styles.successTitle, { color: colors.primary }]}>
+            Transaction Successful
+          </Text>
           <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>
-            Thank you For Using Rahau Sub
+            Thank you For Using {APPNAME}
           </Text>
         </View>
 
         <View style={styles.bottomSection}>
-          <View style={[styles.summaryCard, { backgroundColor: isDark ? colors.surface : "#ffffff", borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: isDark ? colors.surface : "#ffffff",
+                borderColor: colors.border,
+              },
+            ]}
+          >
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Network:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{network || "-"}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Network:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                {network || "-"}
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Phone Number:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{phoneNumber || "-"}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Phone Number:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                {phoneNumber || "-"}
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Amount</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Amount
+              </Text>
               <Text style={[styles.value, { color: colors.text }]}>
                 {amountValue ? `₦${amountValue.toLocaleString()}` : "-"}
               </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Discount</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Discount
+              </Text>
               <Text style={[styles.value, { color: colors.text }]}>
                 {discount ? `${discount}%` : "-"}
               </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Amount Payed</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Amount Payed
+              </Text>
               <Text style={[styles.value, { color: colors.text }]}>
                 {amountPayValue ? `₦${amountPayValue.toLocaleString()}` : "-"}
               </Text>
             </View>
           </View>
 
-          <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.surface : "#f8fbff", borderColor: colors.border }]}>
-            <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
+          <View
+            style={[
+              styles.balanceCard,
+              {
+                backgroundColor: isDark ? colors.surface : "#f8fbff",
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
+              Wallet Balance
+            </Text>
             <View style={styles.balanceRow}>
-              <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>Balance after</Text>
+              <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>
+                Balance after
+              </Text>
               <Text style={[styles.balanceValue, { color: colors.primary }]}>
                 ₦{balance.toLocaleString()}
               </Text>
@@ -165,8 +209,13 @@ const AirtimeSuccess = () => {
           </View>
 
           <View style={styles.actions}>
-            <TouchableOpacity style={[styles.outlineButton, { borderColor: colors.secondary }]} activeOpacity={0.85}>
-              <Text style={[styles.outlineText, { color: colors.secondary }]}>Receipt</Text>
+            <TouchableOpacity
+              style={[styles.outlineButton, { borderColor: colors.secondary }]}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.outlineText, { color: colors.secondary }]}>
+                Receipt
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.fillButton}

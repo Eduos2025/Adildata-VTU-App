@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  Platform,
-  KeyboardAvoidingView,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
+import { AppLogo } from "@/constants/images";
+import { endPoints } from "@/constants/urls";
+import { APPNAME } from "@/constants/variables";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as LocalAuthentication from "expo-local-authentication";
-import { Ionicons } from "@expo/vector-icons";
-import GradientButton from "./buttons";
+import React, { useEffect, useState } from "react";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import AlertModal from "./AlertModal";
-
-const AppLogo = require("@/assets/images/rahau sub.png");
+import GradientButton from "./buttons";
 
 interface LockOverlayProps {
   onUnlock: () => void;
@@ -30,7 +30,7 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fingerEnabled, setFingerEnabled] = useState(false);
-  
+
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -40,13 +40,13 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
       try {
         const userData = await AsyncStorage.getItem("user");
         const storedFinger = await AsyncStorage.getItem("finger");
-        
+
         if (userData) {
           const parsed = JSON.parse(userData);
           setEmail(parsed.email || "");
           setUserName(parsed.name || "User");
         }
-        
+
         if (storedFinger === "1") {
           setFingerEnabled(true);
           // Auto-trigger fingerprint on mount
@@ -64,7 +64,7 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
     if (!compatible) return;
 
     const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: "Unlock Rahau Sub",
+      promptMessage: `Unlock ${APPNAME}`,
       fallbackLabel: "Use Password",
     });
 
@@ -79,7 +79,7 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
           return;
         }
 
-        const response = await fetch("https://api.rahausub.com.ng/verifyToken.php", {
+        const response = await fetch(endPoints.verifyToken, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
@@ -113,7 +113,7 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("https://api.rahausub.com.ng/login.php", {
+      const response = await fetch(endPoints.login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -126,7 +126,7 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
         await AsyncStorage.setItem("user", JSON.stringify(json.user));
         await AsyncStorage.setItem("userToken", json.token);
         await AsyncStorage.setItem("finger", json.finger);
-        
+
         onUnlock();
       } else {
         setAlertTitle("Unlock Failed");
@@ -144,17 +144,29 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.7)" }]}>
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: "rgba(0,0,0,0.7)" },
+        ]}
+      >
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <ScrollView contentContainerStyle={styles.scrollContainer} centerContent keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            centerContent
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.card}>
               <Image source={AppLogo} style={styles.logo} />
               <Text style={styles.greeting}>Welcome back,</Text>
               <Text style={styles.userName}>{userName}</Text>
-              <Text style={styles.instruction}>The app is locked for your security. Please authenticate to continue.</Text>
+              <Text style={styles.instruction}>
+                The app is locked for your security. Please authenticate to
+                continue.
+              </Text>
 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Password</Text>
@@ -167,8 +179,15 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
                     placeholderTextColor="#94a3b8"
                     style={styles.input}
                   />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                    <Ionicons name={showPassword ? "eye-off" : "eye"} size={20} color="#64748b" />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-off" : "eye"}
+                      size={20}
+                      color="#64748b"
+                    />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -180,7 +199,10 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
               />
 
               {fingerEnabled && (
-                <TouchableOpacity onPress={handleFingerprintUnlock} style={styles.fingerprintButton}>
+                <TouchableOpacity
+                  onPress={handleFingerprintUnlock}
+                  style={styles.fingerprintButton}
+                >
                   <Ionicons name="finger-print" size={40} color="#2b6cb0" />
                   <Text style={styles.fingerprintText}>Use Biometric</Text>
                 </TouchableOpacity>

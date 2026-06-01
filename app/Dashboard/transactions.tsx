@@ -1,3 +1,4 @@
+import { endPoints } from "@/constants/urls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -14,8 +15,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import TransactionDetailModal from "../components/TransactionDetailModal";
 import { useTheme } from "../../context/ThemeContext";
+import TransactionDetailModal from "../components/TransactionDetailModal";
+import Header from "../components/header";
 
 // 🔹 Define the transaction type
 type Transaction = {
@@ -39,14 +41,11 @@ const Transactions = () => {
     if (!userToken) return;
 
     try {
-      const response = await fetch(
-        "https://api.rahausub.com.ng/getTransactions.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: userToken }),
-        },
-      );
+      const response = await fetch(endPoints.getTransactions, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: userToken }),
+      });
 
       const data = await response.json(); // <-- `data` is defined here
 
@@ -58,16 +57,16 @@ const Transactions = () => {
       // Map and format transactions for display
       const formatted: Transaction[] = data.transactions.map(
         (trx: any, index: number) => ({
-          ...trx,             // Spread everything from API (token, etc.)
+          ...trx, // Spread everything from API (token, etc.)
           id: trx.id.toString(),
           title: trx.title,
           subtitle: trx.subtitle,
           amount: trx.amount,
           negative: trx.negative,
-          status: trx.status, 
-          phone: trx.phone,   
-          date: trx.date,     
-          fullReceipt: trx.fullReceipt, 
+          status: trx.status,
+          phone: trx.phone,
+          date: trx.date,
+          fullReceipt: trx.fullReceipt,
         }),
       );
 
@@ -88,7 +87,12 @@ const Transactions = () => {
     }, []),
   );
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -99,53 +103,53 @@ const Transactions = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={colors.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.headerLink}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Transaction History</Text>
-            <TouchableOpacity>
-              <Text style={styles.headerLink}>Help</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+         {/* HEADER */}
+                   <Header title="Transaction History" />
 
           <View style={styles.content}>
-            <View style={[styles.transactionsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.transactionsCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
               {transactions.map((item, index) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setSelectedTrx(item);
-                      setIsModalVisible(true);
-                    }}
+                <TouchableOpacity
+                  key={item.id}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setSelectedTrx(item);
+                    setIsModalVisible(true);
+                  }}
+                  style={[
+                    styles.transactionRow,
+                    index !== 0 && [
+                      styles.transactionRowBorder,
+                      { borderTopColor: colors.border },
+                    ],
+                  ]}
+                >
+                  <View>
+                    <Text
+                      style={[styles.transactionTitle, { color: colors.text }]}
+                    >
+                      {item.title}
+                    </Text>
+                    <Text style={styles.transactionSubtitle}>
+                      {item.subtitle}
+                    </Text>
+                  </View>
+                  <Text
                     style={[
-                      styles.transactionRow,
-                      index !== 0 && [styles.transactionRowBorder, { borderTopColor: colors.border }],
+                      styles.transactionAmount,
+                      item.subtitle?.toLowerCase().includes("successfully")
+                        ? styles.amountPositive
+                        : styles.amountNegative,
                     ]}
                   >
-                    <View>
-                      <Text style={[styles.transactionTitle, { color: colors.text }]}>{item.title}</Text>
-                      <Text style={styles.transactionSubtitle}>
-                        {item.subtitle}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.transactionAmount,
-                        item.subtitle?.toLowerCase().includes("successfully")
-                          ? styles.amountPositive
-                          : styles.amountNegative,
-                      ]}
-                    >
-                      {item.amount}
-                    </Text>
-                  </TouchableOpacity>
+                    {item.amount}
+                  </Text>
+                </TouchableOpacity>
               ))}
             </View>
           </View>

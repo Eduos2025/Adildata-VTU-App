@@ -1,3 +1,4 @@
+import { endPoints } from "@/constants/urls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
@@ -69,7 +70,9 @@ const CompanyRegistration = () => {
     setAlertVisible(true);
   };
 
-  const pickImage = async (field: "p1passport" | "p1nin" | "p2passport" | "p2nin") => {
+  const pickImage = async (
+    field: "p1passport" | "p1nin" | "p2passport" | "p2nin",
+  ) => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
@@ -93,7 +96,7 @@ const CompanyRegistration = () => {
     formData: FormData,
     key: string,
     asset: any,
-    fallbackName: string
+    fallbackName: string,
   ) => {
     const uri = asset.uri;
     const name = uri.split("/").pop() ?? fallbackName;
@@ -109,7 +112,7 @@ const CompanyRegistration = () => {
     formData: FormData,
     key: string,
     base64Data: string,
-    filename: string
+    filename: string,
   ) => {
     const path = FileSystem.cacheDirectory + filename;
     const code = base64Data.split("data:image/png;base64,")[1];
@@ -122,20 +125,35 @@ const CompanyRegistration = () => {
 
   const handleSubmit = async () => {
     if (
-      !proposedName1 || !proposedName2 || !classification ||
-      !natureOfCompany || !companyAddress ||
-      !p1Name || !p1Address || !p1Phone || !p1Email ||
-      !p2Name || !p2Address || !p2Phone || !p2Email
+      !proposedName1 ||
+      !proposedName2 ||
+      !classification ||
+      !natureOfCompany ||
+      !companyAddress ||
+      !p1Name ||
+      !p1Address ||
+      !p1Phone ||
+      !p1Email ||
+      !p2Name ||
+      !p2Address ||
+      !p2Phone ||
+      !p2Email
     ) {
       showAlert("Validation Error", "Please fill in all text fields.");
       return;
     }
     if (!p1Passport || !p1Nin || !p1Signature) {
-      showAlert("Validation Error", "Please complete Proprietor 1 uploads and signature.");
+      showAlert(
+        "Validation Error",
+        "Please complete Proprietor 1 uploads and signature.",
+      );
       return;
     }
     if (!p2Passport || !p2Nin || !p2Signature) {
-      showAlert("Validation Error", "Please complete Proprietor 2 uploads and signature.");
+      showAlert(
+        "Validation Error",
+        "Please complete Proprietor 2 uploads and signature.",
+      );
       return;
     }
 
@@ -166,15 +184,35 @@ const CompanyRegistration = () => {
       formData.append("proprietor_2_email", p2Email);
       formData.append("date_submitted", dateSubmitted);
 
-      appendFile(formData, "proprietor_1_passport", p1Passport, "p1_passport.jpg");
+      appendFile(
+        formData,
+        "proprietor_1_passport",
+        p1Passport,
+        "p1_passport.jpg",
+      );
       appendFile(formData, "proprietor_1_nin", p1Nin, "p1_nin.jpg");
-      appendFile(formData, "proprietor_2_passport", p2Passport, "p2_passport.jpg");
+      appendFile(
+        formData,
+        "proprietor_2_passport",
+        p2Passport,
+        "p2_passport.jpg",
+      );
       appendFile(formData, "proprietor_2_nin", p2Nin, "p2_nin.jpg");
 
-      await appendSignature(formData, "proprietor_1_signature", p1Signature, "sig1.png");
-      await appendSignature(formData, "proprietor_2_signature", p2Signature, "sig2.png");
+      await appendSignature(
+        formData,
+        "proprietor_1_signature",
+        p1Signature,
+        "sig1.png",
+      );
+      await appendSignature(
+        formData,
+        "proprietor_2_signature",
+        p2Signature,
+        "sig2.png",
+      );
 
-      const response = await fetch("https://api.rahausub.com.ng/companyCac.php", {
+      const response = await fetch(endPoints.companyCAC, {
         method: "POST",
         body: formData,
         headers: {
@@ -195,7 +233,10 @@ const CompanyRegistration = () => {
           },
         });
       } else {
-        showAlert("Error", responseData.message || "Failed to submit registration.");
+        showAlert(
+          "Error",
+          responseData.message || "Failed to submit registration.",
+        );
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -224,44 +265,78 @@ const CompanyRegistration = () => {
     <>
       <View style={styles.uploadRow}>
         <TouchableOpacity
-          style={[styles.uploadBox, { backgroundColor: isDark ? colors.surface : "#f8faff", borderColor: colors.border }]}
+          style={[
+            styles.uploadBox,
+            {
+              backgroundColor: isDark ? colors.surface : "#f8faff",
+              borderColor: colors.border,
+            },
+          ]}
           onPress={onPickPassport}
         >
           {passport ? (
             <Image source={{ uri: passport.uri }} style={styles.previewImage} />
           ) : (
             <>
-              <Text style={[styles.uploadLabelText, { color: colors.text }]}>Passport</Text>
-              <Text style={[styles.uploadSubText, { color: colors.textMuted }]}>Tap to pick</Text>
+              <Text style={[styles.uploadLabelText, { color: colors.text }]}>
+                Passport
+              </Text>
+              <Text style={[styles.uploadSubText, { color: colors.textMuted }]}>
+                Tap to pick
+              </Text>
             </>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.uploadBox, { backgroundColor: isDark ? colors.surface : "#f8faff", borderColor: colors.border }]}
+          style={[
+            styles.uploadBox,
+            {
+              backgroundColor: isDark ? colors.surface : "#f8faff",
+              borderColor: colors.border,
+            },
+          ]}
           onPress={onPickNin}
         >
           {nin ? (
             <Image source={{ uri: nin.uri }} style={styles.previewImage} />
           ) : (
             <>
-              <Text style={[styles.uploadLabelText, { color: colors.text }]}>NIN Card</Text>
-              <Text style={[styles.uploadSubText, { color: colors.textMuted }]}>Tap to pick</Text>
+              <Text style={[styles.uploadLabelText, { color: colors.text }]}>
+                NIN Card
+              </Text>
+              <Text style={[styles.uploadSubText, { color: colors.textMuted }]}>
+                Tap to pick
+              </Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity
-        style={[styles.signatureBox, { backgroundColor: isDark ? colors.surface : "#f8faff", borderColor: colors.border }]}
+        style={[
+          styles.signatureBox,
+          {
+            backgroundColor: isDark ? colors.surface : "#f8faff",
+            borderColor: colors.border,
+          },
+        ]}
         onPress={() => setActiveSig(sigIndex)}
       >
         {sigValue ? (
-          <Image source={{ uri: sigValue }} style={styles.previewSignature} resizeMode="contain" />
+          <Image
+            source={{ uri: sigValue }}
+            style={styles.previewSignature}
+            resizeMode="contain"
+          />
         ) : (
           <>
-            <Text style={[styles.uploadLabelText, { color: colors.text }]}>Signature</Text>
-            <Text style={[styles.uploadSubText, { color: colors.textMuted }]}>Tap to draw (Blue ink)</Text>
+            <Text style={[styles.uploadLabelText, { color: colors.text }]}>
+              Signature
+            </Text>
+            <Text style={[styles.uploadSubText, { color: colors.textMuted }]}>
+              Tap to draw (Blue ink)
+            </Text>
           </>
         )}
       </TouchableOpacity>
@@ -269,7 +344,12 @@ const CompanyRegistration = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { marginTop: -30, backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { marginTop: -30, backgroundColor: colors.background },
+      ]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
@@ -297,57 +377,139 @@ const CompanyRegistration = () => {
 
           <View style={styles.content}>
             {/* Note */}
-            <View style={[styles.noteBubble, { backgroundColor: isDark ? "#3d1b1b" : "#ffe2e2", borderColor: isDark ? "#b00020" : "#f0a4a4" }]}>
-              <Text style={[styles.noteTitle, { color: isDark ? "#ff5252" : "#b00020" }]}>Note!</Text>
-              <Text style={[styles.noteText, { color: isDark ? "#ffcdd2" : "#4a1f1f" }]}>
-                Company Registration will cost{" "}
-                <Text style={[styles.noteAmount, { color: isDark ? "#ff5252" : "#b00020" }]}>₦45,000</Text>
+            <View
+              style={[
+                styles.noteBubble,
+                {
+                  backgroundColor: isDark ? "#3d1b1b" : "#ffe2e2",
+                  borderColor: isDark ? "#b00020" : "#f0a4a4",
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.noteTitle,
+                  { color: isDark ? "#ff5252" : "#b00020" },
+                ]}
+              >
+                Note!
               </Text>
-              <View style={[styles.noteTail, { backgroundColor: isDark ? "#3d1b1b" : "#ffe2e2", borderColor: isDark ? "#b00020" : "#f0a4a4" }]} />
+              <Text
+                style={[
+                  styles.noteText,
+                  { color: isDark ? "#ffcdd2" : "#4a1f1f" },
+                ]}
+              >
+                Company Registration will cost{" "}
+                <Text
+                  style={[
+                    styles.noteAmount,
+                    { color: isDark ? "#ff5252" : "#b00020" },
+                  ]}
+                >
+                  ₦45,000
+                </Text>
+              </Text>
+              <View
+                style={[
+                  styles.noteTail,
+                  {
+                    backgroundColor: isDark ? "#3d1b1b" : "#ffe2e2",
+                    borderColor: isDark ? "#b00020" : "#f0a4a4",
+                  },
+                ]}
+              />
             </View>
 
             {/* ── Company Information ── */}
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Company Information</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Company Information
+            </Text>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Proposed Company Name 1</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Proposed Company Name 1
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={proposedName1}
               onChangeText={setProposedName1}
               placeholder="First choice name"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Proposed Company Name 2</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Proposed Company Name 2
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={proposedName2}
               onChangeText={setProposedName2}
               placeholder="Second choice name"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Classification</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Classification
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={classification}
               onChangeText={setClassification}
               placeholder="e.g. Private Limited (Ltd)"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Nature of Company</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Nature of Company
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={natureOfCompany}
               onChangeText={setNatureOfCompany}
               placeholder="e.g. Technology, Trading, etc."
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Company Address</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Company Address
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={companyAddress}
               onChangeText={setCompanyAddress}
@@ -355,29 +517,63 @@ const CompanyRegistration = () => {
             />
 
             {/* ── Proprietor 1 ── */}
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 10 }]}>Proprietor 1 Details</Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.text, marginTop: 10 },
+              ]}
+            >
+              Proprietor 1 Details
+            </Text>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Full Name</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Full Name
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={p1Name}
               onChangeText={setP1Name}
               placeholder="Proprietor 1 full name"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Address</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Address
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={p1Address}
               onChangeText={setP1Address}
               placeholder="Residential address"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Phone Number</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Phone Number
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               keyboardType="phone-pad"
               value={p1Phone}
@@ -386,9 +582,18 @@ const CompanyRegistration = () => {
               maxLength={11}
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Email</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Email
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -397,7 +602,14 @@ const CompanyRegistration = () => {
               placeholder="example@mail.com"
             />
 
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 6 }]}>Proprietor 1 — Uploads & Signature</Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.text, marginTop: 6 },
+              ]}
+            >
+              Proprietor 1 — Uploads & Signature
+            </Text>
             <ProprietorUploads
               passport={p1Passport}
               nin={p1Nin}
@@ -408,29 +620,63 @@ const CompanyRegistration = () => {
             />
 
             {/* ── Proprietor 2 ── */}
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 14 }]}>Proprietor 2 Details</Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.text, marginTop: 14 },
+              ]}
+            >
+              Proprietor 2 Details
+            </Text>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Full Name</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Full Name
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={p2Name}
               onChangeText={setP2Name}
               placeholder="Proprietor 2 full name"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Address</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Address
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               value={p2Address}
               onChangeText={setP2Address}
               placeholder="Residential address"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Phone Number</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Phone Number
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               keyboardType="phone-pad"
               value={p2Phone}
@@ -439,9 +685,18 @@ const CompanyRegistration = () => {
               maxLength={11}
             />
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Email</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Email
+            </Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.inputBorder, color: colors.text }]}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               placeholderTextColor={colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -450,7 +705,14 @@ const CompanyRegistration = () => {
               placeholder="example@mail.com"
             />
 
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 6 }]}>Proprietor 2 — Uploads & Signature</Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.text, marginTop: 6 },
+              ]}
+            >
+              Proprietor 2 — Uploads & Signature
+            </Text>
             <ProprietorUploads
               passport={p2Passport}
               nin={p2Nin}
@@ -490,13 +752,17 @@ const CompanyRegistration = () => {
         onBackdropPress={() => setActiveSig(null)}
         style={styles.sigModal}
       >
-        <View style={[styles.sigContainer, { backgroundColor: colors.background }]}>
+        <View
+          style={[styles.sigContainer, { backgroundColor: colors.background }]}
+        >
           <View style={styles.sigHeader}>
             <Text style={[styles.sigTitle, { color: colors.text }]}>
               Proprietor {activeSig} — Draw Signature (Blue)
             </Text>
             <TouchableOpacity onPress={() => setActiveSig(null)}>
-              <Text style={{ color: "#d14343", fontWeight: "600" }}>Cancel</Text>
+              <Text style={{ color: "#d14343", fontWeight: "600" }}>
+                Cancel
+              </Text>
             </TouchableOpacity>
           </View>
           <View style={{ height: 200, width: "100%" }}>
@@ -515,16 +781,23 @@ const CompanyRegistration = () => {
           </View>
           <View style={styles.sigFooter}>
             <TouchableOpacity
-              style={[styles.sigButton, { backgroundColor: isDark ? colors.surface : "#f1f2ff" }]}
+              style={[
+                styles.sigButton,
+                { backgroundColor: isDark ? colors.surface : "#f1f2ff" },
+              ]}
               onPress={() => activeRef.current?.clearSignature()}
             >
-              <Text style={[styles.sigButtonText, { color: "#2b2e80" }]}>Clear</Text>
+              <Text style={[styles.sigButtonText, { color: "#2b2e80" }]}>
+                Clear
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sigButton, { backgroundColor: "#2b2e80" }]}
               onPress={() => activeRef.current?.readSignature()}
             >
-              <Text style={[styles.sigButtonText, { color: "#fff" }]}>Save Signature</Text>
+              <Text style={[styles.sigButtonText, { color: "#fff" }]}>
+                Save Signature
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -611,7 +884,11 @@ const styles = StyleSheet.create({
   previewImage: { width: "100%", height: "100%" },
   previewSignature: { width: "100%", height: "100%", backgroundColor: "#fff" },
   continueButton: { marginTop: 10 },
-  continueGradient: { borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+  continueGradient: {
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
   continueText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
   sigModal: { margin: 20, justifyContent: "center" },
   sigContainer: { height: 400, borderRadius: 24, padding: 20 },

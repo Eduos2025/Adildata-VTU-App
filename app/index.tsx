@@ -1,4 +1,4 @@
-import { AppLogo } from "@/constants/logo";
+import { AppLogo } from "@/constants/images";
 import { styles } from "@/constants/styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -9,7 +9,7 @@ import {
   Text,
   TouchableOpacity,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import GradientButton from "./components/buttons";

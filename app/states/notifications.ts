@@ -19,14 +19,15 @@ const useNotificationStore = create<NotificationStore>()((set, get) => ({
 
   fetchNotifications: async () => {
     const userToken = await AsyncStorage.getItem("userToken");
+    if (!userToken) return;
     try {
       const response = await fetch(endPoints.getAllNotifications, {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
-          // "X-API-Token": userToken,
+          "X-API-Token": userToken,
         },
-        body: JSON.stringify({ token: userToken }),
+        // body: JSON.stringify({ token: userToken }),
       });
       const result = await response.json();
 

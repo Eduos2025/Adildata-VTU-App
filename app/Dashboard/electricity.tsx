@@ -23,6 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import AlertModal from "../components/AlertModal";
 import Header from "../components/header";
+import useUserStore from "../states/user";
 
 const distributors = [
   {
@@ -107,7 +108,6 @@ const Electricity = () => {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  const [balance, setBalance] = useState(0);
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [customerName, setCustomerName] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -117,6 +117,8 @@ const Electricity = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const [customerAddress, setCustomerAddress] = useState("");
+
+  const balance = useUserStore((s) => s.user?.walletBalance) || 0;
 
   const resetForm = () => {
     setSelectedDistributor(null);
@@ -145,29 +147,6 @@ const Electricity = () => {
     phoneNumber,
     token: token ?? "",
   });
-
-  const fetchBalance = async () => {
-    try {
-      setLoadingBalance(true);
-      const userToken = await AsyncStorage.getItem("userToken");
-      if (!userToken) return;
-
-      const response = await fetch(endPoints.getBalance, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: userToken }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setBalance(Number(data.balance));
-      }
-    } catch (error) {
-      console.error("Fetch balance error:", error);
-    } finally {
-      setLoadingBalance(false);
-    }
-  };
 
   const validateMeter = async (
     meter: string,
@@ -241,7 +220,7 @@ const Electricity = () => {
   useFocusEffect(
     useCallback(() => {
       resetForm();
-      fetchBalance();
+
       loadFinger();
       return undefined;
     }, []),
@@ -301,8 +280,9 @@ const Electricity = () => {
 
       const data = await response.json();
       if (data.success) {
+        await useUserStore.getState().refreshDashboard();
         setPinVisible(false);
-        setBalance(data.balance);
+
         goToResult(true, data.token);
       } else {
         setAlertTitle("Purchase Failed");

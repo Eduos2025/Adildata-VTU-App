@@ -35,7 +35,7 @@ export const Colors = {
     surface: "#8f9a94", // Elevated surface
     onPrimary: "#ffffff",
     textMuted: "#dddddd",
-    border: "#166534",
+    border: "#64748B",
     inputBorder: "#15803d",
     success: "#4ade80",
     error: "#f87171",

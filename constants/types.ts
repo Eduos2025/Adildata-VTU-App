@@ -1,3 +1,20 @@
+// export type User = {
+//   id: string;
+//   email: string;
+//   name: string;
+//   haspin: boolean;
+//   accName: string;
+//   accNo: string;
+//   adminRole: string;
+//   bankName: string;
+//   bvn?: string;
+//   phone: string;
+//   referralCode: string;
+//   referralLink: string;
+//   walletBalance: number;
+//   state: string;
+// };
+
 export type User = {
   id: string;
   email: string;
@@ -7,12 +24,17 @@ export type User = {
   accNo: string;
   adminRole: string;
   bankName: string;
-  bvn?: string;
   phone: string;
-  referralCode: string;
-  referralLink: string;
   walletBalance: number;
   state: string;
+
+  referralCode: string;
+  referralLink: string;
+
+  totalReferrals: number;
+  referralEarnings: number;
+  shareMessage: string;
+  referredUsers: any[];
 };
 
 export type NotificationType = {

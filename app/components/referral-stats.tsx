@@ -5,13 +5,13 @@ import React from "react";
 
 import * as Clipboard from "expo-clipboard";
 import {
-    Alert,
-    FlatList,
-    Share,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import useUserStore from "../states/user";
 
@@ -31,15 +31,8 @@ export default function ReferralStatsScreen({
   const shareReferral = async () => {
     try {
       await Share.share({
-        title: "Billpoint Referral",
-        message: `🎉 Join Billpoint today!
-
-  Use my referral code: ${user!.referralCode}
-
-  Sign up and complete your first transaction to get started.
-
-  Download the app here:
-  ${user?.referralLink}`,
+        title: "Refer & Earn",
+        message: referralData.share_message,
       });
     } catch (error) {
       console.error(error);

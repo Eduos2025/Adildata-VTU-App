@@ -1,7 +1,7 @@
 export const baseUrl = "https://api.adildata.com.ng";
 
 export const endPoints = {
-  login: `${baseUrl}/login.php`,
+  login: `${baseUrl}/api.php?action=login`,
   verifyToken: `${baseUrl}/verifyToken.php`,
   register: `${baseUrl}/api.php?action=register`,
   resetPassword: `${baseUrl}/resetPassword.php`,
@@ -31,7 +31,7 @@ export const endPoints = {
   kyc: `${baseUrl}/api.php?action=submit_kyc`,
   getReferralInfo: `${baseUrl}/api.php?action=referral`,
   getReferralStats: `${baseUrl}/api.php?action=get_referral_stats`,
-  getAllNotifications: `${baseUrl}/api.php?action=get_notifications`,
+  getAllNotifications: `${baseUrl}/api.php?action=notifications`,
   getUnreadNotificationCount: `${baseUrl}/api.php?action=get_unread_count`,
   markNotificationAsRead: `${baseUrl}/api.php?action=mark_notification_read`,
   markAllNotificationsAsRead: `${baseUrl}/api.php?action=mark_all_notifications_read`,

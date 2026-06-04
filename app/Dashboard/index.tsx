@@ -1,10 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Clipboard,
   Image,
   ImageBackground,
@@ -53,25 +51,60 @@ import {
   ExamsIcon,
   TvIcon,
 } from "@/constants/images";
-import { User } from "@/constants/types";
-import { endPoints } from "@/constants/urls";
-import { APPNAME } from "@/constants/variables";
 import * as Notifications from "expo-notifications";
 import { useTheme } from "../../context/ThemeContext";
 import IdentityVerificationModal from "../components/kyc-modal";
 import useNotificationStore from "../states/notifications";
 import useUserStore from "../states/user";
 
+const ServiceButton = React.memo(
+  ({
+    service,
+    colors,
+  }: {
+    service: (typeof services)[number];
+    colors: any;
+  }) => {
+    const navigate = () => {
+      router.push(`/Dashboard/${service.id}` as any);
+    };
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.75}
+        style={styles.serviceCard}
+        onPress={navigate}
+      >
+        <View
+          style={[
+            styles.serviceIconWrap,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Image source={service.icon} style={styles.serviceIcon} />
+        </View>
+
+        <Text style={[styles.serviceLabel, { color: colors.text }]}>
+          {service.label}
+        </Text>
+      </TouchableOpacity>
+    );
+  },
+);
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true, // ✅ required in newer versions
+    shouldShowList: true, // ✅ required in newer versions
+  }),
+});
 const Dashboard = () => {
   const { isDark, colors } = useTheme();
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true, // ✅ required in newer versions
-      shouldShowList: true, // ✅ required in newer versions
-    }),
-  });
 
   useEffect(() => {
     Notifications.requestPermissionsAsync();
@@ -88,29 +121,18 @@ const Dashboard = () => {
     });
   };
 
-  const not = async () => {
-    await sendNotification(
-      `Welcome back to ${APPNAME}`,
-      `Get 1 GB as low as ₦250`,
-    );
-  };
-
-  useEffect(() => {
-    not();
-  }, []);
+  // const not = async () => {
+  //   await sendNotification(
+  //     `Welcome back to ${APPNAME}`,
+  //     `Get 1 GB as low as ₦250`,
+  //   );
+  // };
 
   const [refreshing, setRefreshing] = useState(false);
-  const [balance, setBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
-  // const [email, setEmail] = useState("");
-  // const [user, setUser] = useState<User | null>(null);
+
   const [modalOpen, setModalOpen] = useState(false);
 
-  const [accountNumber, setAccountNumber] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [accountName, setAccountName] = useState("");
-
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const transactions = useUserStore((state) => state.transactions);
   const [selectedTrx, setSelectedTrx] = useState<Transaction | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -122,8 +144,8 @@ const Dashboard = () => {
     triggerVibration();
   }, []);
 
-  const setUser = useUserStore((state) => state.setUser);
   const user = useUserStore((state) => state.user);
+  const refreshDashboard = useUserStore((state) => state.refreshDashboard);
 
   const unreadCount = useNotificationStore((state) => state.unreadCount);
 
@@ -131,196 +153,87 @@ const Dashboard = () => {
     (state) => state.fetchNotifications,
   );
 
-  // const fetchUnreadCount = useNotificationStore(
-  //   (state) => state.fetchUnreadCount,
-  // );
+  const name = useUserStore((s) => s.user?.name);
+  const walletBalance = useUserStore((s) => s.user?.walletBalance);
+  const accNo = useUserStore((s) => s.user?.accNo);
+  const accName = useUserStore((s) => s.user?.accName);
+  const bankName = useUserStore((s) => s.user?.bankName);
+  const haspin = useUserStore((s) => s.user?.haspin);
+
+  // useEffect(() => {
+  //   const loadNotifications = async () => {
+  //     console.log(useUserStore.getState().user);
+  //     await Promise.all([fetchNotifications(), loadUser()]);
+  //   };
+
+  //   loadNotifications();
+
+  //   const interval = setInterval(() => {
+  //     loadNotifications();
+  //   }, 30000);
+
+  //   return () => clearInterval(interval);
+  // }, []);
+
+  // const fetchTransactions = async () => {
+  //   const userToken = await AsyncStorage.getItem("userToken");
+  //   if (!userToken) return;
+
+  //   try {
+  //     const response = await fetch(endPoints.getTransactions, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ token: userToken }),
+  //     });
+
+  //     const data = await response.json(); // <-- `data` is defined here
+
+  //     if (!data || !data.success) {
+  //       Alert.alert("Error", data?.message || "Failed to fetch transactions");
+  //       return;
+  //     }
+
+  //     // Map and format transactions for display, limit to 3
+  //     const formatted: Transaction[] = data.transactions
+  //       .slice(0, 4) // take only first 3 items
+  //       .map((trx: any, index: number) => ({
+  //         id: trx.id.toString(),
+  //         title: trx.title,
+  //         subtitle: trx.subtitle,
+  //         amount: trx.amount,
+  //         negative: trx.negative,
+  //         status: trx.status, // include status from API
+  //         phone: trx.phone, // capture phone
+  //         date: trx.date, // capture date
+  //         fullReceipt: trx.fullReceipt, // optional full receipt
+  //       }));
+
+  //     setTransactions(formatted);
+  //   } catch (error) {
+  //     console.error("Fetch transactions error:", error);
+  //     Alert.alert("Error", "Network or server error");
+  //   }
+  // };
 
   useEffect(() => {
-    const loadNotifications = async () => {
-      await Promise.all([fetchNotifications()]);
-    };
-
-    loadNotifications();
-
-    const interval = setInterval(loadNotifications, 30000);
-
-    return () => clearInterval(interval);
+    Promise.all([refreshDashboard(), fetchNotifications()]);
   }, []);
 
-  const fetchTransactions = async () => {
-    const userToken = await AsyncStorage.getItem("userToken");
-    if (!userToken) return;
-
+  const onRefresh = useCallback(async () => {
     try {
-      const response = await fetch(endPoints.getTransactions, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: userToken }),
-      });
+      setRefreshing(true);
 
-      const data = await response.json(); // <-- `data` is defined here
-
-      if (!data || !data.success) {
-        Alert.alert("Error", data?.message || "Failed to fetch transactions");
-        return;
-      }
-
-      // Map and format transactions for display, limit to 3
-      const formatted: Transaction[] = data.transactions
-        .slice(0, 4) // take only first 3 items
-        .map((trx: any, index: number) => ({
-          id: trx.id.toString(),
-          title: trx.title,
-          subtitle: trx.subtitle,
-          amount: trx.amount,
-          negative: trx.negative,
-          status: trx.status, // include status from API
-          phone: trx.phone, // capture phone
-          date: trx.date, // capture date
-          fullReceipt: trx.fullReceipt, // optional full receipt
-        }));
-
-      setTransactions(formatted);
-    } catch (error) {
-      console.error("Fetch transactions error:", error);
-      Alert.alert("Error", "Network or server error");
+      await Promise.all([refreshDashboard(), fetchNotifications()]);
+    } finally {
+      setRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchTransactions();
-    fetchNotifications();
   }, []);
-
-  useEffect(() => {
-    // getBalance();
-    getAccountDetails();
-  }, [isModalVisible]);
-
-  //Get Account Details Function
-  const getAccountDetails = async () => {
-    try {
-      const userToken = await AsyncStorage.getItem("userToken");
-
-      if (!userToken) return;
-
-      const response = await fetch(endPoints.getAccountDetails, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token: userToken }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setAccountNumber(data.account_number);
-        setBankName(data.bank_name);
-        setAccountName(data.account_name);
-      } else {
-        console.log("Account Error:", data.message);
-      }
-    } catch (error) {
-      console.error("Account fetch error:", error);
-    }
-  };
-
-  // 🔄 Pull-to-refresh
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    // getBalance(true);
-    fetchTransactions();
-  }, []);
-
-  // 👤 Load user from storage
-  useEffect(() => {
-    const loadUser = async () => {
-      let myUser: User = {
-        id: "",
-        email: "",
-        name: "",
-        haspin: false,
-        accName: "",
-        accNo: "",
-        adminRole: "",
-        bankName: "",
-        phone: "",
-        referralCode: "",
-        referralLink: "",
-        walletBalance: 0,
-        state: "",
-      };
-      try {
-        const userData = await AsyncStorage.getItem("user");
-        if (userData) {
-          const { id, email, name, phone, haspin } = JSON.parse(userData);
-
-          myUser = {
-            id: id,
-            email: email,
-            name: name,
-            haspin: haspin,
-            accName: "",
-            accNo: "",
-            adminRole: "",
-            bankName: "",
-            phone: phone,
-            referralCode: "",
-            referralLink: "",
-            walletBalance: 0,
-            state: "",
-          };
-
-          setUser(myUser);
-        }
-
-        const userToken = await AsyncStorage.getItem("userToken");
-        if (!userToken) return;
-
-        const response = await fetch(endPoints.profile, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: userToken }),
-        });
-
-        const data = await response.json();
-
-        const updatedUser: User = {
-          ...myUser,
-          accName: data.data.acc_name,
-          accNo: data.data.acc_no,
-          bankName: data.data.bank_name,
-          walletBalance: data.data.wallet_balance,
-          referralLink: data.data.referral_link,
-          referralCode: data.data.referral_code,
-        };
-
-        setUser(updatedUser);
-        console.log(user);
-      } catch (e) {
-        console.log("User parse error:", e);
-      }
-    };
-
-    loadUser();
-  }, []);
-
   // 🔐 Redirect if no PIN
   useEffect(() => {
-    if (user?.haspin === false) {
+    if (haspin === false) {
       router.replace("/Dashboard/set-pin");
     }
   }, [user]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchTransactions();
-      // getBalance(true);
-    }, []),
-  );
 
   return (
     <SafeAreaView
@@ -392,7 +305,7 @@ const Dashboard = () => {
               </View>
               <View style={styles.headerTextWrap}>
                 <Text style={[styles.userName, { color: "#ffffff" }]}>
-                  {user?.name}
+                  {name}
                 </Text>
                 <Text style={[styles.userType, { color: "#e6eeff" }]}>
                   Customer Account
@@ -403,7 +316,7 @@ const Dashboard = () => {
                   Balance
                 </Text>
                 <Text style={[styles.balanceValue, { color: "#ffffff" }]}>
-                  ₦{balance}
+                  ₦{walletBalance || 0}
                 </Text>
               </View>
             </View>
@@ -430,7 +343,7 @@ const Dashboard = () => {
                   <Text style={[styles.bankTitle, { color: colors.text }]}>
                     Bank Details
                   </Text>
-                  {!accountName && !accountNumber ? (
+                  {!accName && !accNo ? (
                     <>
                       <Text
                         style={[styles.bankSub, { color: colors.textMuted }]}
@@ -458,27 +371,29 @@ const Dashboard = () => {
                     </>
                   )}
                 </View>
-                <TouchableOpacity
-                  style={[
-                    styles.fundButton,
-                    {
-                      backgroundColor: colors.accent,
-                      elevation: 1,
-                    },
-                  ]}
-                  onPress={() => setModalOpen(true)}
-                >
-                  <Text
+                {!accNo && (
+                  <TouchableOpacity
                     style={[
-                      styles.fundButtonText,
-                      { color: isDark ? "#000000" : "#ffffff" },
+                      styles.fundButton,
+                      {
+                        backgroundColor: colors.accent,
+                        elevation: 1,
+                      },
                     ]}
+                    onPress={() => setModalOpen(true)}
                   >
-                    Fund Wallet
-                  </Text>
-                </TouchableOpacity>
+                    <Text
+                      style={[
+                        styles.fundButtonText,
+                        { color: isDark ? "#000000" : "#ffffff" },
+                      ]}
+                    >
+                      Fund Wallet
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
-              {accountName && accountNumber && (
+              {accName && accNo && (
                 <>
                   <View style={styles.bankInfoGroup}>
                     <Text
@@ -490,7 +405,7 @@ const Dashboard = () => {
                       style={{ flexDirection: "row", alignItems: "center" }}
                     >
                       <Text style={[styles.bankValue, { color: colors.text }]}>
-                        {accountNumber || (
+                        {accNo || (
                           <ActivityIndicator
                             size="small"
                             color={colors.accent}
@@ -509,7 +424,7 @@ const Dashboard = () => {
                         ]}
                         onPress={() => {
                           // Copy to clipboard
-                          Clipboard.setString(accountNumber || "");
+                          Clipboard.setString(accNo || "");
                         }}
                       >
                         <Text
@@ -547,7 +462,7 @@ const Dashboard = () => {
 
                   <View style={styles.bankFooter}>
                     <Text style={[styles.bankOwner, { color: colors.text }]}>
-                      {accountName || (
+                      {accName || (
                         <ActivityIndicator size="small" color={colors.accent} />
                       )}
                     </Text>
@@ -575,6 +490,15 @@ const Dashboard = () => {
             Our Services
           </Text>
           <View style={styles.servicesGrid}>
+            {services.map((service) => (
+              <ServiceButton
+                key={service.id}
+                service={service}
+                colors={colors}
+              />
+            ))}
+          </View>
+          {/* <View style={styles.servicesGrid}>
             {services.map((service) => (
               <TouchableOpacity
                 activeOpacity={0.75}
@@ -617,7 +541,7 @@ const Dashboard = () => {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </View> */}
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Recent Transactions

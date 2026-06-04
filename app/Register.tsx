@@ -102,10 +102,12 @@ const Register = () => {
 
       const json = await response.json();
 
-      if (json.success) {
+      console.log(json);
+
+      if (json.status === "success") {
         setisLoading(false);
         setAlertTitle("Success");
-        setAlertMessage(json.message);
+        setAlertMessage(json.data.message);
         setAlertVisible(true);
         router.push("/Login");
       } else {

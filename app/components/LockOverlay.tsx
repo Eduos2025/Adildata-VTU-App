@@ -121,11 +121,10 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
 
       const json = await response.json();
 
-      if (json.success) {
+      if (json.status === "success") {
         // ✅ CRITICAL: Update storage with new token to prevent background expiration
-        await AsyncStorage.setItem("user", JSON.stringify(json.user));
-        await AsyncStorage.setItem("userToken", json.token);
-        await AsyncStorage.setItem("finger", json.finger);
+        await AsyncStorage.setItem("user", JSON.stringify(json.data));
+        await AsyncStorage.setItem("userToken", json.data.token);
 
         onUnlock();
       } else {

@@ -23,6 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import AlertModal from "../components/AlertModal";
 import Header from "../components/header";
+import useUserStore from "../states/user";
 
 const exams = [
   { id: "waec", label: "WAEC", logo: require("@/assets/images/waec.png") },
@@ -45,6 +46,8 @@ const Exams = () => {
     label: string;
     logo: number;
   } | null>(null);
+
+  const balance = useUserStore((s) => s.user?.walletBalance) || 0;
 
   const [loading, setLoading] = useState(false);
   const [profileId, setProfileId] = useState(""); // for JAMB
@@ -232,7 +235,7 @@ const Exams = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-        {/* HEADER */}
+          {/* HEADER */}
           <Header title="Exam Tokens" />
 
           <View style={styles.content}>
@@ -523,7 +526,7 @@ const Exams = () => {
                   Balance
                 </Text>
                 <Text style={[styles.balanceValue, { color: colors.primary }]}>
-                  ₦32,500.00
+                  {`₦${balance}`}
                 </Text>
               </View>
             </View>

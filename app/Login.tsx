@@ -25,7 +25,6 @@ import GradientButton from "./components/buttons";
 
 const Login = () => {
   const { isDark, colors } = useTheme();
-  const [loggedinEmail, setLoggedinEmail] = useState("");
 
   useEffect(() => {
     const loadEmail = async () => {
@@ -48,7 +47,7 @@ const Login = () => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [finger, setFinger] = useState<boolean>(false);
+  const [finger, setFinger] = useState<boolean>(true);
 
   useEffect(() => {
     const getFingerFromStorage = async () => {
@@ -79,7 +78,10 @@ const Login = () => {
       promptMessage: "Login with Fingerprint",
     });
 
+    console.log(result);
+
     if (result.success) {
+      await AsyncStorage.setItem("finger", "1");
       try {
         // ✅ Get stored token
         const token = await AsyncStorage.getItem("userToken");
@@ -135,11 +137,10 @@ const Login = () => {
 
       const json = await response.json();
 
-      if (json.success) {
+      if (json.status === "success") {
         // ✅ STORE TOKEN
-        await AsyncStorage.setItem("user", JSON.stringify(json.user));
-        await AsyncStorage.setItem("userToken", json.token);
-        await AsyncStorage.setItem("finger", json.finger);
+        await AsyncStorage.setItem("user", JSON.stringify(json.data));
+        await AsyncStorage.setItem("userToken", json.data.token);
 
         setAlertTitle("Success");
         setAlertMessage(json.message);
@@ -282,8 +283,7 @@ const Login = () => {
 
         {/* Login Button */}
         <GradientButton
-          loading={isLoading}
-          title="Login"
+          title={!isLoading ? "Login" : "Please wait..."}
           onPress={handleLogin}
         />
 

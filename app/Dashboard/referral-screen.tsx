@@ -1,61 +1,22 @@
-import { referralData } from "@/constants/types";
-import { endPoints } from "@/constants/urls";
 import { useTheme } from "@/context/ThemeContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
-    ActivityIndicator,
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import Header from "../components/header";
 import ReferralStatsScreen from "../components/referral-stats";
+import useUserStore from "../states/user";
 
 export default function ReferralScreen() {
   const { colors } = useTheme();
-  //   const user = useUserStore((state) => state.user);
 
-  const [referralData, setReferralData] = useState<referralData | null>(null);
-
-  const getReferralStats = async () => {
-    const userToken = await AsyncStorage.getItem("userToken");
-    if (!userToken) return;
-    console.log("loading");
-    try {
-      const response = await fetch(endPoints.getReferralStats, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Token": userToken,
-        },
-        // body: JSON.stringify({ token: userToken }),
-      });
-
-      const data = await response.json();
-
-      console.log(data);
-      const refData = {
-        referral_code: data.data.referral_code,
-        referral_link: data.data.referral_link,
-        referred_users: data.data.referred_users,
-        total_earnings: data.data.total_earnings,
-        total_referred: data.data.total_referred,
-        share_message: data.data.share_message,
-      };
-      setReferralData(refData);
-      console.log(refData);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    getReferralStats();
-  }, []);
+  const user = useUserStore((state) => state.user);
 
   return (
     <SafeAreaView
@@ -93,8 +54,17 @@ export default function ReferralScreen() {
             Invite friends to Adil Data and earn on each referral.
           </Text>
         </View>
-        {referralData ? (
-          <ReferralStatsScreen referralData={referralData} />
+        {user ? (
+          <ReferralStatsScreen
+            referralData={{
+              total_referred: user!.totalReferrals,
+              total_earnings: user!.referralEarnings,
+              share_message: user!.shareMessage,
+              referred_users: user!.referredUsers,
+              referral_link: user!.referralLink,
+              referral_code: user!.referralCode,
+            }}
+          />
         ) : (
           <ActivityIndicator />
         )}

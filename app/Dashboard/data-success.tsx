@@ -1,34 +1,38 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import { Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import {
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 
-import { useTheme } from "../../context/ThemeContext";
-import { endPoints } from "@/constants/urls";
 import { APPNAME } from "@/constants/variables";
+import { useTheme } from "../../context/ThemeContext";
+import useUserStore from "../states/user";
 
 const SuccessIcon = require("@/assets/images/success.png");
 
 const DataSuccess = () => {
   const { isDark, colors } = useTheme();
-  const { network, phoneNumber, type, plan, amount } =
-    useLocalSearchParams<{
-      network?: string;
-      phoneNumber?: string;
-      type?: string;
-      plan?: string;
-      amount?: string;
-    }>();
+  const { network, phoneNumber, type, plan, amount } = useLocalSearchParams<{
+    network?: string;
+    phoneNumber?: string;
+    type?: string;
+    plan?: string;
+    amount?: string;
+  }>();
 
-  const [refreshing, setRefreshing] = useState(false);
-  const [balance, setBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("");
+  const user = useUserStore.getState().user;
+
+  const balance = user!.walletBalance;
 
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -62,90 +66,96 @@ const DataSuccess = () => {
     );
   };
 
-  const getBalance = async (isRefresh = false) => {
-    try {
-      if (!isRefresh) setLoading(true);
-
-      const userToken = await AsyncStorage.getItem("userToken");
-
-      if (!userToken) return;
-
-      const response = await fetch(
-        endPoints.getBalance,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: userToken }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        setBalance(Number(data.balance) || 0);
-        setEmail(data.email || "");
-      }
-    } catch (error) {
-      console.error("Fetch balance error:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    getBalance();
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
-      getBalance(true);
       triggerVibration();
     }, []),
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.topSection}>
           <Image source={SuccessIcon} style={styles.successImage} />
-          <Text style={[styles.successTitle, { color: colors.primary }]}>Transaction Successful</Text>
-          <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>Thank you For Using {APPNAME}</Text>
+          <Text style={[styles.successTitle, { color: colors.primary }]}>
+            Transaction Successful
+          </Text>
+          <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>
+            Thank you For Using {APPNAME}
+          </Text>
         </View>
 
         <View style={styles.bottomSection}>
-          <View style={[styles.summaryCard, { backgroundColor: isDark ? colors.surface : "#ffffff", borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: isDark ? colors.surface : "#ffffff",
+                borderColor: colors.border,
+              },
+            ]}
+          >
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Network:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{network || "-"}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Network:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                {network || "-"}
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Type:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{type || "-"}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Type:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                {type || "-"}
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Plan:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{plan || "-"}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Plan:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                {plan || "-"}
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Phone Number:</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{phoneNumber || "-"}</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Phone Number:
+              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>
+                {phoneNumber || "-"}
+              </Text>
             </View>
             <View style={styles.row}>
-              <Text style={[styles.label, { color: colors.textMuted }]}>Amount:</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Amount:
+              </Text>
               <Text style={[styles.value, { color: colors.text }]}>
                 {amount ? `₦${Number(amount).toLocaleString()}` : "-"}
               </Text>
             </View>
           </View>
 
-          <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.surface : "#f8fbff", borderColor: colors.border }]}>
-            <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
+          <View
+            style={[
+              styles.balanceCard,
+              {
+                backgroundColor: isDark ? colors.surface : "#f8fbff",
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
+              Wallet Balance
+            </Text>
             <View style={styles.balanceRow}>
-              <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>Balance after</Text>
+              <Text style={[styles.balanceSmall, { color: colors.textMuted }]}>
+                Balance after
+              </Text>
               <Text style={[styles.balanceValue, { color: colors.primary }]}>
                 ₦{balance.toLocaleString()}
               </Text>
@@ -153,8 +163,13 @@ const DataSuccess = () => {
           </View>
 
           <View style={styles.actions}>
-            <TouchableOpacity style={[styles.outlineButton, { borderColor: colors.secondary }]} activeOpacity={0.85}>
-              <Text style={[styles.outlineText, { color: colors.secondary }]}>Receipt</Text>
+            <TouchableOpacity
+              style={[styles.outlineButton, { borderColor: colors.secondary }]}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.outlineText, { color: colors.secondary }]}>
+                Receipt
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.fillButton}

@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as LocalAuthentication from "expo-local-authentication";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -24,6 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import AlertModal from "../components/AlertModal";
 import Header from "../components/header";
+import useUserStore from "../states/user";
 
 const networks = [
   { id: "mtn", label: "MTN", logo: require("@/assets/images/mtn.png") },
@@ -109,14 +110,12 @@ const DataPage = () => {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  const [balance, setBalance] = useState(0);
-  const [loadingBalance, setLoadingBalance] = useState(true);
-  const [email, setEmail] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [manualListing, setManualListing] = useState(false);
   const [dataTypes, setDataTypes] = useState<any[]>([{ name: "DATA BUNDLE" }]);
   const [fetchingTypes, setFetchingTypes] = useState(false);
+
+  const balance = useUserStore((s) => s.user?.walletBalance) || 0;
 
   const resetForm = () => {
     setSelectedNetwork(null);
@@ -191,31 +190,6 @@ const DataPage = () => {
     });
   };
 
-  const getBalance = async (isRefresh = false) => {
-    try {
-      if (!isRefresh) setLoadingBalance(true);
-      const userToken = await AsyncStorage.getItem("userToken");
-      if (!userToken) return;
-
-      const response = await fetch(endPoints.getBalance, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: userToken }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setBalance(Number(data.balance) || 0);
-        setEmail(data.email || "");
-      }
-    } catch (error) {
-      console.error("Fetch balance error:", error);
-    } finally {
-      setLoadingBalance(false);
-      setRefreshing(false);
-    }
-  };
-
   const fetchDataPlans = async (networkId: string, typeObj: any) => {
     try {
       setFetchingPlans(true);
@@ -255,13 +229,8 @@ const DataPage = () => {
     }
   };
 
-  useEffect(() => {
-    getBalance();
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
-      getBalance(true);
       const loadFinger = async () => {
         try {
           const storedFinger = await AsyncStorage.getItem("finger");
@@ -415,7 +384,6 @@ const DataPage = () => {
       if (data.success) {
         setPinVisible(false);
         goToResult(true);
-        getBalance(true);
       } else {
         setAlertTitle("Failed");
         setAlertMessage(data.message || "Transaction failed");
@@ -470,9 +438,9 @@ const DataPage = () => {
 
       const data = await response.json();
       if (data.success) {
+        useUserStore.getState().refreshDashboard();
         setPinVisible(false);
         goToResult(true);
-        getBalance(true);
       } else {
         setPin("");
         setAlertTitle("Failed");
@@ -505,7 +473,7 @@ const DataPage = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-         {/* HEADER */}
+          {/* HEADER */}
           <Header title="Buy Data" />
 
           <View style={styles.content}>

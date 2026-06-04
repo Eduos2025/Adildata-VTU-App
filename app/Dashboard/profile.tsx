@@ -247,8 +247,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.multiRemove(["userToken", "user", "finger"]);
-      router.replace("/Login");
+      useUserStore.getState().logout();
     } catch (error) {
       setAlertTitle("Error");
       setAlertMessage("Failed to logout. Please try again.");

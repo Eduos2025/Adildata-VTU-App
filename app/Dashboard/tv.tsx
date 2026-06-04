@@ -23,6 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import AlertModal from "../components/AlertModal";
 import Header from "../components/header";
+import useUserStore from "../states/user";
 
 const providers = [
   { id: "gotv", label: "GOTV", logo: require("@/assets/images/gotv.png") },
@@ -76,7 +77,6 @@ const TvSubscription = () => {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  const [balance, setBalance] = useState(0);
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [customerName, setCustomerName] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -85,6 +85,8 @@ const TvSubscription = () => {
   const [loading, setLoading] = useState(false);
   const [errorVisible, setErrorVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const balance = useUserStore((s) => s.user?.walletBalance) || 0;
 
   const resetForm = () => {
     setSelectedProvider(null);
@@ -200,28 +202,6 @@ const TvSubscription = () => {
       params: params,
     });
   };
-  const fetchBalance = async () => {
-    try {
-      setLoadingBalance(true);
-      const userToken = await AsyncStorage.getItem("userToken");
-      if (!userToken) return;
-
-      const response = await fetch(endPoints.getBalance, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: userToken }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setBalance(Number(data.balance));
-      }
-    } catch (error) {
-      console.error("Fetch balance error:", error);
-    } finally {
-      setLoadingBalance(false);
-    }
-  };
 
   const loadFinger = async () => {
     try {
@@ -239,7 +219,7 @@ const TvSubscription = () => {
   useFocusEffect(
     useCallback(() => {
       resetForm();
-      fetchBalance();
+
       loadFinger();
       return undefined;
     }, []),
@@ -272,8 +252,8 @@ const TvSubscription = () => {
 
       const data = await response.json();
       if (data.success) {
+        await useUserStore.getState().refreshDashboard();
         setPinVisible(false);
-        setBalance(data.balance);
         goToResult(true);
       } else {
         setAlertTitle("Purchase Failed");

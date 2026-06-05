@@ -153,6 +153,8 @@ const Dashboard = () => {
     (state) => state.fetchNotifications,
   );
 
+  const setFingerPrintStatus = useUserStore((s) => s.setFingerPrintStatus);
+
   const name = useUserStore((s) => s.user?.name);
   const walletBalance = useUserStore((s) => s.user?.walletBalance);
   const accNo = useUserStore((s) => s.user?.accNo);
@@ -160,70 +162,23 @@ const Dashboard = () => {
   const bankName = useUserStore((s) => s.user?.bankName);
   const haspin = useUserStore((s) => s.user?.haspin);
 
-  // useEffect(() => {
-  //   const loadNotifications = async () => {
-  //     console.log(useUserStore.getState().user);
-  //     await Promise.all([fetchNotifications(), loadUser()]);
-  //   };
-
-  //   loadNotifications();
-
-  //   const interval = setInterval(() => {
-  //     loadNotifications();
-  //   }, 30000);
-
-  //   return () => clearInterval(interval);
-  // }, []);
-
-  // const fetchTransactions = async () => {
-  //   const userToken = await AsyncStorage.getItem("userToken");
-  //   if (!userToken) return;
-
-  //   try {
-  //     const response = await fetch(endPoints.getTransactions, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ token: userToken }),
-  //     });
-
-  //     const data = await response.json(); // <-- `data` is defined here
-
-  //     if (!data || !data.success) {
-  //       Alert.alert("Error", data?.message || "Failed to fetch transactions");
-  //       return;
-  //     }
-
-  //     // Map and format transactions for display, limit to 3
-  //     const formatted: Transaction[] = data.transactions
-  //       .slice(0, 4) // take only first 3 items
-  //       .map((trx: any, index: number) => ({
-  //         id: trx.id.toString(),
-  //         title: trx.title,
-  //         subtitle: trx.subtitle,
-  //         amount: trx.amount,
-  //         negative: trx.negative,
-  //         status: trx.status, // include status from API
-  //         phone: trx.phone, // capture phone
-  //         date: trx.date, // capture date
-  //         fullReceipt: trx.fullReceipt, // optional full receipt
-  //       }));
-
-  //     setTransactions(formatted);
-  //   } catch (error) {
-  //     console.error("Fetch transactions error:", error);
-  //     Alert.alert("Error", "Network or server error");
-  //   }
-  // };
-
   useEffect(() => {
-    Promise.all([refreshDashboard(), fetchNotifications()]);
+    Promise.all([
+      refreshDashboard(),
+      fetchNotifications(),
+      setFingerPrintStatus(),
+    ]);
   }, []);
 
   const onRefresh = useCallback(async () => {
     try {
       setRefreshing(true);
 
-      await Promise.all([refreshDashboard(), fetchNotifications()]);
+      await Promise.all([
+        refreshDashboard(),
+        fetchNotifications(),
+        setFingerPrintStatus(),
+      ]);
     } finally {
       setRefreshing(false);
     }

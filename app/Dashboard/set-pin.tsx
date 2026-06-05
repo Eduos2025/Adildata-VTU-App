@@ -65,6 +65,7 @@ const SetPin = () => {
       });
 
       const json = await response.json();
+      console.log(json);
 
       if (json.success) {
         const userData = await AsyncStorage.getItem("user");

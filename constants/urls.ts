@@ -2,7 +2,7 @@ export const baseUrl = "https://api.adildata.com.ng";
 
 export const endPoints = {
   login: `${baseUrl}/api.php?action=login`,
-  verifyToken: `${baseUrl}/verifyToken.php`,
+  verifyToken: `${baseUrl}/api.php?action=verify_token`,
   register: `${baseUrl}/api.php?action=register`,
   resetPassword: `${baseUrl}/resetPassword.php`,
   getBalance: `${baseUrl}/getBalance.php`,

@@ -16,6 +16,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import useUserStore from "../states/user";
+import { verifyToken } from "../utils/verify-token";
 import AlertModal from "./AlertModal";
 import GradientButton from "./buttons";
 
@@ -25,8 +27,6 @@ interface LockOverlayProps {
 
 const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [userName, setUserName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fingerEnabled, setFingerEnabled] = useState(false);
@@ -35,17 +35,13 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
+  const userName = useUserStore((s) => s.user?.name) || "";
+  const email = useUserStore((s) => s.user?.email) || "";
+
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const userData = await AsyncStorage.getItem("user");
         const storedFinger = await AsyncStorage.getItem("finger");
-
-        if (userData) {
-          const parsed = JSON.parse(userData);
-          setEmail(parsed.email || "");
-          setUserName(parsed.name || "User");
-        }
 
         if (storedFinger === "1") {
           setFingerEnabled(true);
@@ -79,14 +75,8 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
           return;
         }
 
-        const response = await fetch(endPoints.verifyToken, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token }),
-        });
-
-        const json = await response.json();
-        if (json.success) {
+        const isVerified = await verifyToken(token);
+        if (isVerified) {
           onUnlock();
         } else {
           setAlertTitle("Session Expired");
@@ -104,6 +94,7 @@ const LockOverlay: React.FC<LockOverlayProps> = ({ onUnlock }) => {
   };
 
   const handlePasswordUnlock = async () => {
+    console.log(email, userName, password);
     if (password.length < 4) {
       setAlertTitle("Error");
       setAlertMessage("Please enter your login password.");

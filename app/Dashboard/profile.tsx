@@ -40,7 +40,7 @@ const Profile = () => {
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [verificationPassword, setVerificationPassword] = React.useState("");
-  const [isFingerEnabled, setIsFingerEnabled] = useState(false);
+  // const [isFingerEnabled, setIsFingerEnabled] = useState(false);
   const [updatingFinger, setUpdatingFinger] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pinVerifyModal, setPinVerifyModal] = useState(false);
@@ -51,6 +51,7 @@ const Profile = () => {
   const [alertMessage, setAlertMessage] = useState("");
 
   const user = useUserStore((state) => state.user);
+  const isFingerEnabled = useUserStore((s) => s.fingerPrintEnabled);
 
   const handleFingerprintToggle = async (value: boolean) => {
     try {
@@ -65,8 +66,9 @@ const Profile = () => {
       }
 
       setUpdatingFinger(true);
-      setIsFingerEnabled(value);
+
       await AsyncStorage.setItem("finger", value ? "1" : "0");
+      useUserStore.getState().setFingerPrintStatus();
 
       const userToken = await AsyncStorage.getItem("userToken");
       if (userToken) {
@@ -138,21 +140,21 @@ const Profile = () => {
     setIsLoading(true);
     try {
       // 1️⃣ First Verify Current Password (this will give us a fresh token)
-      const userData = await AsyncStorage.getItem("user");
-      if (!userData) return;
-      const parsedUser = JSON.parse(userData);
+
+      if (!user) return;
 
       const loginRes = await fetch(endPoints.login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: parsedUser.email,
+          email: user.email,
           password: currentPassword,
         }),
       });
 
       const loginData = await loginRes.json();
-      if (!loginData.success) {
+
+      if (loginData.status !== "success") {
         setAlertTitle("Verification Failed");
         setAlertMessage(loginData.message || "Incorrect current password");
         setAlertVisible(true);
@@ -160,22 +162,23 @@ const Profile = () => {
       }
 
       // ✅ Update fresh session tokens locally
-      await AsyncStorage.setItem("user", JSON.stringify(loginData.user));
-      await AsyncStorage.setItem("userToken", loginData.token);
-      await AsyncStorage.setItem("finger", loginData.finger);
+      await AsyncStorage.setItem("user", JSON.stringify(loginData.data));
+      await AsyncStorage.setItem("userToken", loginData.data.token);
+      // await AsyncStorage.setItem("finger", loginData.finger);
 
       // 2️⃣ Now Update to New Password using the FRESH token
       const response = await fetch(endPoints.setPassword, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token: loginData.token,
+          token: loginData.data.token,
           type: "loginPassword",
           value: password,
         }),
       });
 
       const data = await response.json();
+      console.log(data);
       if (data.success) {
         // Play success vibration
         await Haptics.notificationAsync(
@@ -200,6 +203,10 @@ const Profile = () => {
       setAlertVisible(true);
     } finally {
       setIsLoading(false);
+      if (router.canDismiss()) {
+        router.dismissAll();
+      }
+      router.replace("/Login");
     }
   };
 
@@ -208,25 +215,22 @@ const Profile = () => {
 
     setIsLoading(true);
     try {
-      const userData = await AsyncStorage.getItem("user");
-      if (!userData) return;
-      const parsedUser = JSON.parse(userData);
+      if (!user) return;
 
       const response = await fetch(endPoints.login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: parsedUser.email,
+          email: user.email,
           password: verificationPassword,
         }),
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (data.status === "success") {
         // ✅ CRITICAL: Update storage with new token returned by login.php
-        await AsyncStorage.setItem("user", JSON.stringify(data.user));
-        await AsyncStorage.setItem("userToken", data.token);
-        await AsyncStorage.setItem("finger", data.finger);
+        await AsyncStorage.setItem("user", JSON.stringify(data.data));
+        await AsyncStorage.setItem("userToken", data.data.token);
 
         setPinVerifyModal(false);
         setVerificationPassword("");

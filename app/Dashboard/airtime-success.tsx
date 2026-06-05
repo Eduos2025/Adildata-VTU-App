@@ -1,7 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   Image,
   StatusBar,
@@ -15,9 +14,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 
-import { endPoints } from "@/constants/urls";
 import { APPNAME } from "@/constants/variables";
 import { useTheme } from "../../context/ThemeContext";
+import useUserStore from "../states/user";
 
 const SuccessIcon = require("@/assets/images/success.png");
 
@@ -35,10 +34,7 @@ const AirtimeSuccess = () => {
   const amountValue = Number(amount) || 0;
   const amountPayValue = Number(amountToPay) || 0;
 
-  const [refreshing, setRefreshing] = useState(false);
-  const [balance, setBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("");
+  const balance = useUserStore((n) => n.user?.walletBalance) || 0;
 
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -50,6 +46,7 @@ const AirtimeSuccess = () => {
   });
 
   useEffect(() => {
+    useUserStore.getState().refreshDashboard();
     Notifications.requestPermissionsAsync();
   }, []);
 
@@ -72,49 +69,8 @@ const AirtimeSuccess = () => {
     );
   };
 
-  // 🔥 Fetch Balance Function
-  const getBalance = async (isRefresh = false) => {
-    try {
-      if (!isRefresh) setLoading(true);
-
-      const userToken = await AsyncStorage.getItem("userToken");
-
-      if (!userToken) {
-        console.log("No token found");
-        return;
-      }
-
-      const response = await fetch(endPoints.getBalance, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token: userToken }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setBalance(Number(data.balance) || 0);
-        setEmail(data.email || "");
-      } else {
-        console.log("API Error:", data.message);
-      }
-    } catch (error) {
-      console.error("Fetch balance error:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    getBalance();
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
-      getBalance(true);
       triggerVibration();
     }, []),
   );

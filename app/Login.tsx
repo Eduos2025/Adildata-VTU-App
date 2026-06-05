@@ -22,12 +22,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import AlertModal from "./components/AlertModal";
 import GradientButton from "./components/buttons";
+import useUserStore from "./states/user";
+import { verifyToken } from "./utils/verify-token";
 
 const Login = () => {
   const { isDark, colors } = useTheme();
 
+  const finger = useUserStore((s) => s.fingerPrintEnabled);
+
   useEffect(() => {
     const loadEmail = async () => {
+      await useUserStore.getState().setFingerPrintStatus();
       const raw = await AsyncStorage.getItem("user");
       if (raw) {
         const user = JSON.parse(raw);
@@ -47,23 +52,6 @@ const Login = () => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [finger, setFinger] = useState<boolean>(true);
-
-  useEffect(() => {
-    const getFingerFromStorage = async () => {
-      try {
-        const storedFinger = await AsyncStorage.getItem("finger");
-
-        if (storedFinger !== null) {
-          setFinger(storedFinger === "1"); // convert string → boolean
-        }
-      } catch (error) {
-        console.error("Error retrieving finger from storage:", error);
-      }
-    };
-
-    getFingerFromStorage();
-  }, []);
 
   const handleFingerprintLogin = async () => {
     // Check if device supports biometrics
@@ -78,8 +66,6 @@ const Login = () => {
       promptMessage: "Login with Fingerprint",
     });
 
-    console.log(result);
-
     if (result.success) {
       await AsyncStorage.setItem("finger", "1");
       try {
@@ -91,18 +77,9 @@ const Login = () => {
           return;
         }
 
-        // ✅ Send token to server
-        const response = await fetch(endPoints.verifyToken, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token }),
-        });
+        const isVerified = await verifyToken(token);
 
-        const json = await response.json();
-
-        if (json.success) {
+        if (isVerified) {
           router.replace("/Dashboard");
         } else {
           alert("Session expired. Please login again.");
@@ -110,9 +87,12 @@ const Login = () => {
       } catch (err) {
         console.log(err);
         alert("Error verifying session");
+      } finally {
+        setStateModalVisible(false);
       }
     } else {
       alert("Fingerprint failed");
+      setStateModalVisible(false);
     }
   };
 

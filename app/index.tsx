@@ -89,7 +89,7 @@ export default function Index() {
               fontSize: 16,
               textAlign: "center",
               marginTop: 20,
-              color: colors.primary,
+              color: colors.text,
             }}
           >
             Already Have an Account? Log In

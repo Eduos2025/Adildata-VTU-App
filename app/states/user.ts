@@ -3,6 +3,7 @@ import { endPoints } from "@/constants/urls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { create } from "zustand";
+import { getFingerFromStorage } from "../utils/get-fingerprint-from-storage";
 
 type Transaction = {
   id: string;
@@ -17,10 +18,12 @@ type UserStore = {
   user: User | null;
   transactions: Transaction[];
   loading: boolean;
+  fingerPrintEnabled: boolean;
   updateBalance: (amount: number) => void;
   logout: () => void;
 
   refreshDashboard: () => Promise<void>;
+  setFingerPrintStatus: () => Promise<void>;
 };
 
 const timeRequest = async (label: string, request: Promise<Response>) => {
@@ -37,6 +40,14 @@ const useUserStore = create<UserStore>((set) => ({
   user: null,
   transactions: [],
   loading: false,
+  fingerPrintEnabled: false,
+  setFingerPrintStatus: async () => {
+    const isEnabled = await getFingerFromStorage();
+
+    set({
+      fingerPrintEnabled: isEnabled,
+    });
+  },
 
   refreshDashboard: async () => {
     const start = Date.now();

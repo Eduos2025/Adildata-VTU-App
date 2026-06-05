@@ -68,6 +68,7 @@ const DataSuccess = () => {
 
   useFocusEffect(
     useCallback(() => {
+      useUserStore.getState().refreshDashboard();
       triggerVibration();
     }, []),
   );

@@ -1,7 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import {
   Image,
   StatusBar,
@@ -15,9 +14,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 
-import { endPoints } from "@/constants/urls";
-import { useTheme } from "../../context/ThemeContext";
 import { APPNAME } from "@/constants/variables";
+import { useTheme } from "../../context/ThemeContext";
+import useUserStore from "../states/user";
 
 const SuccessIcon = require("@/assets/images/success.png");
 
@@ -29,8 +28,7 @@ const CacSuccess = () => {
     amount?: string;
   }>();
 
-  const [balance, setBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const balance = useUserStore((n) => n.user?.walletBalance) || 0;
 
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -53,34 +51,9 @@ const CacSuccess = () => {
     });
   };
 
-  const getBalance = async () => {
-    try {
-      setLoading(true);
-      const userToken = await AsyncStorage.getItem("userToken");
-      if (!userToken) return;
-
-      const response = await fetch(endPoints.getBalance, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token: userToken }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setBalance(Number(data.balance) || 0);
-      }
-    } catch (error) {
-      console.error("Fetch balance error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useFocusEffect(
     useCallback(() => {
-      getBalance();
+      useUserStore.getState().refreshDashboard();
       triggerVibration();
     }, []),
   );

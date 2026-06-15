@@ -5,6 +5,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as LocalAuthentication from "expo-local-authentication";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
+
+import { networks } from "@/constants/networks";
+import { beneficiaryType } from "@/constants/types";
 import {
   ActivityIndicator,
   Image,
@@ -25,54 +28,8 @@ import { useTheme } from "../../context/ThemeContext";
 import AlertModal from "../components/AlertModal";
 import Header from "../components/header";
 import useUserStore from "../states/user";
-
-const networks = [
-  { id: "mtn", label: "MTN", logo: require("@/assets/images/mtn.png") },
-  {
-    id: "airtel",
-    label: "Airtel",
-    logo: require("@/assets/images/airtel.png"),
-  },
-  { id: "glo", label: "Glo", logo: require("@/assets/images/glo.png") },
-  {
-    id: "etisalat",
-    label: "9mobile",
-    logo: require("@/assets/images/9mobile.png"),
-  },
-];
-
-const mapNetworkFromAPI = (apiNetwork: any): string | null => {
-  if (typeof apiNetwork === "string") {
-    const networkMap: { [key: string]: string } = {
-      "mtn nigeria": "mtn",
-      "airtel nigeria": "airtel",
-      "glo nigeria": "glo",
-      "9mobile nigeria": "etisalat",
-      "etisalat nigeria": "etisalat",
-      "t2 mobile nigeria": "etisalat",
-      "9mobile": "etisalat",
-      etisalat: "etisalat",
-    };
-    const key = apiNetwork.toLowerCase().trim();
-    return networkMap[key] || null;
-  }
-
-  // If it's an object with id property
-  if (apiNetwork && typeof apiNetwork === "object" && apiNetwork.id) {
-    const idMap: { [key: string]: string } = {
-      mtn: "mtn",
-      airtel: "airtel",
-      glo: "glo",
-      "9mobile": "etisalat",
-      etisalat: "etisalat",
-      "t2 mobile": "etisalat",
-    };
-    const id = String(apiNetwork.id).toLowerCase().trim();
-    return idMap[id] || null;
-  }
-
-  return null;
-};
+import { detectNetworkUtil } from "../utils/detect-network";
+import { pickContact } from "../utils/pick-contact";
 
 const cleanDataPlanName = (name: string): string => {
   if (!name) return "";
@@ -115,7 +72,13 @@ const DataPage = () => {
   const [dataTypes, setDataTypes] = useState<any[]>([{ name: "DATA BUNDLE" }]);
   const [fetchingTypes, setFetchingTypes] = useState(false);
 
+  const [beneficiaries, setBeneficiaries] = useState<Array<beneficiaryType>>(
+    [],
+  );
+
   const balance = useUserStore((s) => s.user?.walletBalance) || 0;
+
+  //TODO: Load and display recent beneficiaries
 
   const resetForm = () => {
     setSelectedNetwork(null);
@@ -243,48 +206,39 @@ const DataPage = () => {
     }, []),
   );
 
+ 
+  const getContactFromPhone = async () => {
+    const phone = await pickContact();
+
+    console.log(phone);
+    if (!phone) return;
+
+    setPhoneNumber(phone);
+
+    handlePhoneChange(phone);
+  };
+
   // Detect Network Function
+
   const detectNetwork = async (phone: string) => {
     try {
-      const res = await fetch(endPoints.detectNetwork, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phone }),
-      });
+      const detected = await detectNetworkUtil(phone);
+      if (!detected) {
+        setManualListing(true);
+        setAlertTitle("Detection Failed");
+        setAlertMessage("Unable to detect network.");
+        setAlertVisible(true);
+        return;
+      }
 
-      const data = await res.json();
-      console.log("Detect Network Response:", data);
-
-      if (data.network || data.raw) {
-        const networkId = mapNetworkFromAPI(data.network || data.raw);
-
-        if (networkId) {
-          const detected = networks.find((net) => net.id === networkId);
-
-          if (detected) {
-            setSelectedNetwork(detected);
-            setManualListing(false);
-            fetchDataTypes(detected.id);
-          } else {
-            setManualListing(true);
-            setAlertTitle("Detection Failed");
-            setAlertMessage("Unable to find network. Please select manually.");
-            setAlertVisible(true);
-          }
-        } else {
-          setManualListing(true);
-          setAlertTitle("Detection Failed");
-          setAlertMessage(
-            "Network format not recognized. Please select manually.",
-          );
-          setAlertVisible(true);
-        }
+      if (detected) {
+        setSelectedNetwork(detected);
+        setManualListing(false);
+        fetchDataTypes(detected.id);
       } else {
         setManualListing(true);
         setAlertTitle("Detection Failed");
-        setAlertMessage(data.message || "Unable to detect network.");
+        setAlertMessage("Unable to find network. Please select manually.");
         setAlertVisible(true);
       }
     } catch (err) {
@@ -384,6 +338,16 @@ const DataPage = () => {
       if (data.success) {
         setPinVisible(false);
         goToResult(true);
+
+        //TODO: Handle state and cloud save
+        //push to recent beneficiary
+
+        const beneficiary: beneficiaryType = {
+          network: selectedNetwork!,
+          phone: phoneNumber,
+        };
+
+        setBeneficiaries([...beneficiaries, beneficiary]);
       } else {
         setAlertTitle("Failed");
         setAlertMessage(data.message || "Transaction failed");
@@ -441,6 +405,15 @@ const DataPage = () => {
         useUserStore.getState().refreshDashboard();
         setPinVisible(false);
         goToResult(true);
+        //TODO: Handle state and cloud save
+        //push to recent beneficiary
+
+        const beneficiary: beneficiaryType = {
+          network: selectedNetwork!,
+          phone: phoneNumber,
+        };
+
+        setBeneficiaries([...beneficiaries, beneficiary]);
       } else {
         setPin("");
         setAlertTitle("Failed");
@@ -473,9 +446,39 @@ const DataPage = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* HEADER */}
           <Header title="Buy Data" />
-
+          //TODO: Add recent beneficiaries
+          {beneficiaries.length > 0 && (
+            <View style={{ padding: 16 }}>
+              <Text style={{ fontWeight: "700", marginBottom: 16 }}>
+                Recent Beneficiaries
+              </Text>
+              <View style={{ flexDirection: "row", gap: 16 }}>
+                {beneficiaries.map((beneficiary) => (
+                  <TouchableOpacity
+                    key={beneficiary.phone}
+                    style={{
+                      gap: 5,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                    onPress={() => {
+                      handlePhoneChange(beneficiary.phone);
+                      setPhoneNumber(beneficiary.phone);
+                    }}
+                  >
+                    <Image
+                      source={beneficiary.network.logo}
+                      style={styles.networkLogo}
+                    />
+                    <Text style={{ color: colors.textMuted }}>
+                      {beneficiary.phone}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
           <View style={styles.content}>
             <Text style={[styles.inputLabel, { color: colors.text }]}>
               Customer Phone Number
@@ -515,7 +518,18 @@ const DataPage = () => {
                     color={colors.textMuted}
                   />
                 </TouchableOpacity>
-              ) : null}
+              ) : (
+                <TouchableOpacity
+                  onPress={getContactFromPhone}
+                  style={{ margin: 8 }}
+                >
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={32}
+                    color={colors.primary}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
 
             {(selectedNetwork || manualListing) && (

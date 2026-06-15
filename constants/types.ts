@@ -27,6 +27,7 @@ export type User = {
   phone: string;
   walletBalance: number;
   state: string;
+  token: string;
 
   referralCode: string;
   referralLink: string;
@@ -65,4 +66,25 @@ export type referralData = {
 export type ReferralStatsResponse = {
   status: string;
   data: referralData;
+};
+
+export type beneficiaryType = {
+  network: {
+    id: string;
+    label: string;
+    logo: any;
+  };
+  phone: string;
+};
+
+export type ServiceType = {
+  id: string;
+  label: string;
+  icon: any;
+};
+
+export type NetworkType = {
+  id: string;
+  label: string;
+  logo: any;
 };

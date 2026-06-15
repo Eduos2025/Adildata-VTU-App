@@ -1,4 +1,4 @@
-import { endPoints } from "@/constants/urls";
+import { AppLogo } from "@/constants/images";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -10,14 +10,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
 import AlertModal from "./components/AlertModal";
 import GradientButton from "./components/buttons";
-import { AppLogo } from "@/constants/images";
-
+import { resetPassword } from "./utils/reset-password";
 
 const ForgotPassword = () => {
   const { isDark, colors } = useTheme();
@@ -38,31 +37,19 @@ const ForgotPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(endPoints.resetPassword, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+      const response = await resetPassword(email);
 
-      const json = await response.json();
-
-      if (json.success) {
-        setAlertTitle("Email Sent");
-        setAlertMessage(
-          json.message ||
-            "Password reset instructions have been sent to your email.",
-        );
-        setAlertVisible(true);
-        // We stay on this page to let them read the message, or they can go back
-      } else {
+      if (!response) {
         setAlertTitle("Request Failed");
-        setAlertMessage(
-          json.message || "We couldn't process your request. Please try again.",
-        );
+        setAlertMessage("We couldn't process your request. Please try again.");
         setAlertVisible(true);
       }
+
+      setAlertTitle("Email Sent");
+      setAlertMessage(
+        "Password reset instructions have been sent to your email.",
+      );
+      setAlertVisible(true);
     } catch (err) {
       console.log(err);
       setAlertTitle("Connection Error");

@@ -144,12 +144,14 @@ const useUserStore = create<UserStore>((set) => ({
           email,
           name: `${oname + " " + sname}`,
           phone,
+          token,
           haspin: localUser.haspin,
 
           accName,
           accNo,
           bankName,
           walletBalance,
+        
 
           referralCode,
           referralLink,

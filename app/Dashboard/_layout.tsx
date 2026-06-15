@@ -12,6 +12,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import LockOverlay from "../components/LockOverlay";
+import useUserStore from "../states/user";
+import { usePushNotifications } from "../hooks/push-notification";
 
 const tabLabels: Record<string, string> = {
   index: "Home",
@@ -41,6 +43,12 @@ export default function RootLayout() {
   const [isLocked, setIsLocked] = useState(false);
   const appState = useRef(AppState.currentState);
   const backgroundTime = useRef<number | null>(null);
+
+  const token = useUserStore((s) => s.user?.token) || "";
+
+  console.log(token);
+
+  usePushNotifications(token);
 
   useEffect(() => {
     const subscription = AppState.addEventListener(

@@ -36,4 +36,5 @@ export const endPoints = {
   markNotificationAsRead: `${baseUrl}/api.php?action=mark_notification_read`,
   markAllNotificationsAsRead: `${baseUrl}/api.php?action=mark_all_notifications_read`,
   profile: `${baseUrl}/api.php?action=profile`,
+  pushNotification: `${baseUrl}/saveDeviceToken.php`,
 };

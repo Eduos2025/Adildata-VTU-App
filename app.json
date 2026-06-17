@@ -1,22 +1,21 @@
 {
   "expo": {
-    "name": "Adil Data",
-    "slug": "adilpay",
+    "name": "Adildata",
+    "slug": "adildata",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "adilpay",
+    "scheme": "adildata",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.adildata.app"
+      "bundleIdentifier": "ng.com.adildatah"
     },
-
     "android": {
       "googleServicesFile": "./google-services.json",
-      "package": "com.adildata.app",
+      "package": "ng.com.adildatah",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/icon.png",
@@ -24,9 +23,12 @@
         "monochromeImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ]
     },
-
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -68,9 +70,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "94c6e342-5076-46e4-889d-7fd5a6299838"
+        "projectId": "43dbd318-4c0c-4d12-972a-13d3b3894e55"
       }
     },
-    "owner": "smoqdev"
+    "owner": "smoqdev1"
   }
 }
